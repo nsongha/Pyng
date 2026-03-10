@@ -49,11 +49,11 @@ Week 1          Week 2          Week 3          Week 4
 
 - [x] WiFi check-in flow
 - [x] Admin quản lý WiFi whitelist
-- [ ] Scheduler: nhắc check-in buổi sáng
-- [ ] Scheduler: nhắc check-out buổi chiều
+- [x] Scheduler: nhắc check-in buổi sáng
+- [x] Scheduler: nhắc check-out buổi chiều
 - [x] Check-out flow
 - [x] WFH flow
-- [ ] Setup GitHub Actions Cron workflows (nhắc, báo cáo, QR refresh) ← dời từ Phase 0
+- [x] Setup GitHub Actions Cron workflows (nhắc, báo cáo, QR refresh) ← dời từ Phase 0
 
 **Done when**: 5 người test được check-in GPS + WiFi mỗi ngày
 

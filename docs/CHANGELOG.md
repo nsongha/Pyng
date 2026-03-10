@@ -23,6 +23,11 @@
   - `bot/handlers/checkin.py` — GPS/WiFi check-in, checkout, WFH flow
   - `bot/app.py` — Register all handlers
   - `api/webhook.py` — Dùng create_bot() factory
+- **Phase 1 — Wave 2**: Infra & Cron (C1-C3)
+  - `api/cron/_helpers.py` — Shared cron utilities (auth, Telegram API via httpx)
+  - `api/cron/morning.py` — Nhắc check-in 8:30 cho active users chưa check-in
+  - `api/cron/evening.py` — Nhắc check-out 17:45 cho users đã check-in chưa checkout
+  - `.github/workflows/cron-reminders.yml` — GitHub Actions cron (weekdays, UTC+7)
 
 ### docs
 
