@@ -7,6 +7,23 @@ description: Quy trình chia phase lớn thành streams song song, tạo task bo
 > Dùng khi phase có **> 8 tasks** hoặc **chạm > 2 domains** (bot + api + miniapp).
 > Nếu phase nhỏ (≤ 5 tasks, 1 domain) → dùng `/new-feature` thay thế.
 
+## Thuật ngữ
+
+| Thuật ngữ  | Ý nghĩa                                                                 | Ví dụ                                  |
+| ---------- | ----------------------------------------------------------------------- | -------------------------------------- |
+| **Stream** | Nhóm tasks theo **domain/concern** — mỗi stream chạy trong 1 chat riêng | 🛢️ Database, 🤖 Bot Handlers, ⏰ Infra |
+| **Wave**   | Đợt chạy, gộp 1+ streams cùng execution order                           | Wave 1 (sequential), Wave 2 (parallel) |
+
+```
+              Wave 1 (Sequential ⛓️)     Wave 2 (Parallel 🔀)
+Stream 🛢️    [A1→A2→...→A7]
+Stream 🤖                                [B1→B2→...→B8]
+Stream ⏰                                [C1→C2→C3]
+```
+
+- **Stream** = trục dọc (ai làm gì — domain)
+- **Wave** = trục ngang (chạy lúc nào — timeline)
+
 ## 1. Analyze Phase Scope
 
 - Đọc `docs/PROJECT_CONTEXT.md` → hiểu current status
@@ -36,50 +53,60 @@ Nhóm tasks theo **domain/concern**, KHÔNG theo thứ tự thời gian:
 
 ## 3. Tạo TASK_BOARD.md
 
-Tạo file `docs/TASK_BOARD.md` với cấu trúc sau:
+Tạo file `docs/TASK_BOARD.md` theo template `templates/docs/TASK_BOARD.md`.
+
+**BẮT BUỘC** phải có đầy đủ các sections sau:
+
+1. **Parallel Execution Strategy** — tổng quan streams + waves
+2. **Context: Codebase Hiện Tại** — foundation, files có sẵn
+3. **Stream sections** — task table + acceptance criteria
+4. **Cross-Stream Dependencies** — dependency map + execution order
+5. **Conflict Prevention Rules** — shared files + merge strategy
+6. **Progress Summary** — bảng tổng tiến độ
+7. **Execution Playbook** — prompts copy-paste cho từng wave
+
+### ⚠️ Section Cross-Stream Dependencies (BẮT BUỘC)
+
+AI agent **PHẢI** tạo section này đầy đủ với:
 
 ```markdown
-# Phase X Task Board
-
-## Parallel Execution Strategy
-
-- Tổng quan streams, mục tiêu, timeline
-
-## Context: Codebase Hiện Tại
-
-> Section này giúp AI agent hiểu codebase mà KHÔNG cần đọc toàn bộ history.
-
-- Tech stack liên quan
-- Files/modules đã có sẵn (foundation)
-- API endpoints available
-
-## Stream [Emoji] [Tên]
-
-**Owner**: [domain]
-**Scope**: [folders affected]
-
-| #   | Task | Status | Priority | Dependencies | Files affected |
-| --- | ---- | ------ | -------- | ------------ | -------------- |
-| X1  | ...  | 📋     | P0       | -            | ...            |
-
-**Acceptance Criteria per task:**
-
-- Tiêu chí cụ thể để đánh giá task hoàn thành
-
 ## Cross-Stream Dependencies
 
-| Task | Depends on | Type         |
-| ---- | ---------- | ------------ |
-| C3   | B3 ✅      | cross-stream |
+### Dependency Map
 
-## Progress Summary
+| Task | Depends on | Type         | Notes                                 |
+| ---- | ---------- | ------------ | ------------------------------------- |
+| B1   | A3         | cross-stream | Registration cần user_service         |
+| C1   | A3         | cross-stream | Morning cron cần user_service         |
+| B3   | A4, A5     | cross-stream | GPS checkin cần checkin_service + GPS |
 
-| Stream | Total | Done | Remaining | % |
+### Execution Order
+
+1. 🛢️ Stream A → chạy **trước** (Wave 1 — foundation)
+2. 🤖 Stream B + ⏰ Stream C → chạy **song song** (Wave 2 — sau A xong)
 ```
 
-**Status icons:** 📋 TODO → 🔄 IN PROGRESS → ✅ DONE → ⏸️ BLOCKED
+### ⚠️ Section Conflict Prevention Rules (BẮT BUỘC)
 
-**Priority:** P0 (must have) → P1 (should have) → P2 (nice to have)
+AI agent **PHẢI** tạo section này để ngăn merge conflict khi song song:
+
+```markdown
+## Conflict Prevention Rules
+
+### Shared Files
+
+| File                 | Stream   | Tasks | Rule                                          |
+| -------------------- | -------- | ----- | --------------------------------------------- |
+| `bot/app.py`         | 🤖 Bot   | B1-B8 | Chỉ Stream 🤖 sửa, thêm handler registrations |
+| `requirements.txt`   | 🛢️ DB    | A1    | Chỉ Stream 🛢️ sửa ở Wave 1                    |
+| `config/settings.py` | ⏰ Infra | C1    | Chỉ đọc, KHÔNG sửa                            |
+
+### Merge Strategy
+
+- Mỗi stream KHÔNG commit riêng — gộp commit ở bước Finalize
+- Nếu 2 streams cùng cần sửa 1 file → stream chạy SAU phải đọc lại file trước khi sửa
+- Sync point: sau mỗi wave hoàn thành → verify trước khi bắt đầu wave tiếp
+```
 
 ## 4. Review & Approve Task Board
 
@@ -174,17 +201,18 @@ Sau khi tạo task board, **BẮT BUỘC** thêm section `## Execution Playbook`
 1. **Đọc `PROJECT_CONTEXT.md` trước** (user rules đã bắt buộc)
 2. **Đọc `TASK_BOARD.md`** → hiểu scope + dependencies + context + execution playbook
 3. **Check Cross-Stream Dependencies** trước khi bắt đầu task
-4. **Update status** trên TASK_BOARD.md khi hoàn thành task (📋 → ✅) + update Progress Summary
-5. **Chỉ sửa files trong scope** của stream mình
-6. **Test + verify** sau mỗi nhóm tasks (bước 1-2 của `/task-completion`)
-7. **KHÔNG tự commit** — commit sẽ được gộp ở bước merge
+4. **Check Conflict Prevention Rules** → KHÔNG sửa file ngoài scope
+5. **Update status** trên TASK_BOARD.md khi hoàn thành task (📋 → ✅) + update Progress Summary
+6. **Chỉ sửa files trong scope** của stream mình
+7. **Test + verify** sau mỗi nhóm tasks (bước 1-2 của `/task-completion`)
+8. **KHÔNG tự commit** — commit sẽ được gộp ở bước merge
 
 ### 5.4 Lưu ý song song
 
 - Mỗi stream chạy trong **1 chat riêng** → context sạch
 - Agent **TỰ update** TASK_BOARD.md status — user không cần canh
 - **KHÔNG chạy bước 3-4-5** của `/task-completion` (commit, docs update) → dồn vào bước merge
-- Nếu 2 streams cùng wave sửa **shared file** → ghi rõ trong playbook ai sửa trước
+- Nếu 2 streams cùng wave sửa **shared file** → phải tuân theo Conflict Prevention Rules
 
 ## 6. Verify & Review
 

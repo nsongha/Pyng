@@ -1,7 +1,8 @@
 # PROJECT_CONTEXT.md — Pyng / BSMlabs Check-in Bot
 
 > ⚡ File này dùng để AI (hoặc dev mới) đọc nhanh toàn bộ dự án trong 2 phút.  
-> Để hiểu sâu hơn từng phần, đọc file tương ứng được link bên dưới.
+> Để hiểu sâu hơn từng phần, đọc file tương ứng được link bên dưới.  
+> Cập nhật lần cuối: 2026-03-10
 
 ---
 
@@ -13,6 +14,7 @@ Chi phí vận hành: **$0/tháng**.
 
 |                  |                             |
 | ---------------- | --------------------------- |
+| **Mô hình**      | Internal tool               |
 | **Bot username** | `@pyng85111_bot`            |
 | **Màu chủ đạo**  | `#FC3C44` (Apple Music Red) |
 | **Tagline**      | _"Ping your presence"_      |
@@ -53,13 +55,24 @@ Nếu tất cả fail → nhân viên gửi ảnh selfie kèm ghi chú, admin du
 - **Admin/HR**: cấu hình geofence, WiFi whitelist, xem báo cáo, quản lý quỹ muộn
 - **Manager**: xem dashboard team, duyệt request, nhận alert burnout
 
-## 6. Tech Stack (tóm tắt)
+## 6. Tech Stack
 
-- **Bot + Mini App**: Python 3.11 + `python-telegram-bot` v21 → **Vercel Serverless**
-- **Database**: **Supabase** PostgreSQL (team đã quen)
-- **Scheduler**: **GitHub Actions Cron** (thay APScheduler/Railway, $0)
-- **QR Token**: Supabase (không cần Redis — đủ dùng cho <50 người)
-- **Mini App**: React 18 + Vite → Vercel
+| Layer     | Technology                 | Version / Notes                |
+| --------- | -------------------------- | ------------------------------ |
+| Language  | Python                     | 3.11+                          |
+| Bot       | python-telegram-bot        | v21.5 (async, webhook)         |
+| Database  | PostgreSQL (Supabase)      | Free tier 500MB                |
+| Hosting   | Vercel Serverless          | Free — auto-deploy từ GitHub   |
+| Scheduler | GitHub Actions Cron        | Free — thay APScheduler, $0    |
+| QR Store  | Supabase (không cần Redis) | Đủ dùng cho <50 người          |
+| Mini App  | React 18 + Vite + Tailwind | TypeScript, @twa-dev/sdk       |
+| Report    | openpyxl                   | Xuất Excel (Phase 2+)          |
+| QR Gen    | qrcode + Pillow            | QR image generation (Phase 2+) |
+| Geo       | geopy                      | v2.4.1 — distance, geofence    |
+| Validate  | pydantic                   | v2.5.3                         |
+| HTTP      | httpx                      | v0.27.0                        |
+| Config    | python-dotenv              | v1.0.0                         |
+| Linting   | ruff                       | Configured in project          |
 
 → Chi tiết: [TECH_STACK.md](./TECH_STACK.md)
 
@@ -94,9 +107,80 @@ GitHub Actions (Cron)
     Supabase PostgreSQL
 ```
 
+- **Cấu trúc repo**: Monorepo — `bot/`, `api/`, `services/`, `db/`, `config/`, `miniapp/`, `qr/`
+- **API format**: REST — webhook `https://pyng.vercel.app/api/webhook`
+- **Data flow**: `Telegram App ←→ Vercel Serverless ←→ Supabase PostgreSQL`
+
 → Chi tiết: [ARCHITECTURE.md](./ARCHITECTURE.md)
 
-## 7. Tính năng nổi bật
+## 8. Modules hiện có
+
+### Bot Engine (`bot/`)
+
+- `bot/app.py` — Application factory, đăng ký handlers
+- `bot/handlers/start.py` — Registration flow (ConversationHandler: tên → email → chờ duyệt)
+- `bot/handlers/admin.py` — Admin approval, GPS settings, WiFi management
+- `bot/handlers/checkin.py` — GPS/WiFi check-in, checkout, WFH flow
+- `bot/validators/gps_validator.py` — Geofence check (geopy), spoofing detection
+- `bot/validators/wifi_validator.py` — SSID whitelist validation
+
+### API (`api/`)
+
+- `api/webhook.py` — Vercel serverless endpoint, nhận Telegram webhook
+- `api/cron/morning.py` — Nhắc check-in 8:30 cho active users chưa check-in
+- `api/cron/evening.py` — Nhắc check-out 17:45 cho users đã check-in chưa checkout
+
+### Services (`services/`)
+
+- `services/user_service.py` — Register, activate, reject, is_admin
+- `services/checkin_service.py` — Checkin/checkout/WFH, working hours, duplicate check
+- `services/office_service.py` — Office CRUD, WiFi whitelist management
+- `services/cron_helpers.py` — Shared cron utilities (auth, Telegram API via httpx)
+
+### Database (`db/`)
+
+- `db/client.py` — Supabase client (singleton, service_role_key)
+- `db/schema.sql` — 10 tables + indexes + RLS
+
+### Config (`config/`)
+
+- `config/settings.py` — Centralized settings từ env vars (pydantic)
+
+### QR Display (`qr/`)
+
+- `qr/index.html` — Static page, client-side polling QR từ Supabase
+
+### Mini App (`miniapp/`)
+
+- React 18 + Vite + Tailwind — Dashboard cá nhân (Phase 4)
+
+## 9. API Endpoints
+
+### Bot Webhook
+
+| Method | Path           | Mô tả                         |
+| ------ | -------------- | ----------------------------- |
+| POST   | `/api/webhook` | Nhận Telegram webhook updates |
+
+### Cron (GitHub Actions gọi)
+
+| Method | Path                | Mô tả                                    |
+| ------ | ------------------- | ---------------------------------------- |
+| GET    | `/api/cron/morning` | Nhắc check-in 08:30 (cần `CRON_SECRET`)  |
+| GET    | `/api/cron/evening` | Nhắc check-out 17:45 (cần `CRON_SECRET`) |
+
+### Mini App API (Phase 2+)
+
+| Method | Path                      | Mô tả                     |
+| ------ | ------------------------- | ------------------------- |
+| GET    | `/api/me`                 | Thông tin cá nhân + stats |
+| GET    | `/api/checkins`           | Lịch sử check-in          |
+| GET    | `/api/team/today`         | Trạng thái team hôm nay   |
+| GET    | `/api/leaderboard`        | Bảng xếp hạng điểm        |
+| POST   | `/api/leave/request`      | Xin nghỉ                  |
+| GET    | `/api/admin/report/daily` | Báo cáo hàng ngày (Admin) |
+
+## 10. Tính năng nổi bật
 
 - ✅ 4 phương thức check-in dự phòng lẫn nhau
 - ✅ Gamification: điểm, streak, leaderboard
@@ -105,15 +189,35 @@ GitHub Actions (Cron)
 - ✅ Admin set geofence range ngay trong bot (không cần vào server)
 - ✅ Telegram Mini App cho dashboard đẹp
 
-## 8. Trạng thái dự án
+## 11. Trạng thái dự án
 
-- **Phase**: MVP Planning
+- **Version**: 0.1.0 (Unreleased)
+- **Phase**: Phase 1 — MVP Core (hoàn thành Wave 1 + Wave 2)
 - **Target go-live**: 4 tuần từ kick-off
 - **Team size**: 1–2 devs
 
+### Unreleased changes
+
+- Phase 0: Bot scaffold, webhook, /start, Supabase schema + seed
+- Phase 1 Wave 1: DB client, services (user, checkin, office), validators (GPS, WiFi)
+- Phase 1 Wave 2: Bot handlers (start, admin, checkin), cron reminders (morning, evening)
+
+### Next milestone
+
+- Phase 2: QR System, NFC System, Manual Fallback
+
 → Lộ trình chi tiết: [DEV_ROADMAP.md](./DEV_ROADMAP.md)
 
-## 9. Các file tài liệu
+## 12. Key Conventions
+
+- **Commit format**: Conventional Commits (tiếng Việt): `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`
+- **Naming**: `snake_case` cho Python files/variables, `kebab-case` cho config files
+- **Modules**: Python packages với `__init__.py`
+- **Config**: `.env` → `config/settings.py` (pydantic) → inject vào services
+- **Architecture**: Tách biệt handler ↔ service ↔ validator ↔ DB client
+- **Docs**: Luôn update docs trước/sau khi implement feature
+
+## 13. Các file tài liệu
 
 | File                                               | Nội dung                      |
 | -------------------------------------------------- | ----------------------------- |
@@ -130,3 +234,11 @@ GitHub Actions (Cron)
 | [USAGE.md](./USAGE.md)                             | Hướng dẫn dùng cho nhân viên  |
 | [KNOWN_ISSUES.md](./KNOWN_ISSUES.md)               | Bugs & edge cases đã biết     |
 | [CHANGELOG.md](./CHANGELOG.md)                     | Lịch sử thay đổi              |
+| [TASK_BOARD.md](./TASK_BOARD.md)                   | Tiến độ phase hiện tại        |
+
+## 14. Context Size Guide
+
+- Chỉ đọc file này: ~160 lines
+- \+ TECH_STACK.md: ~+420 lines
+- \+ ARCHITECTURE.md: ~+340 lines
+- Ngưỡng cảnh báo: > 300 lines tổng → cân nhắc trim context
