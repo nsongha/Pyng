@@ -5,7 +5,7 @@ python-telegram-bot==21.5
 python-dotenv==1.0.0
 
 # Database (Phase 1)
-supabase==2.3.0
+# supabase SDK removed — dùng REST API trực tiếp qua httpx (tránh conflict version)
 
 # QR Code (Phase 1+)
 # qrcode[pil]==7.4.2
@@ -15,10 +15,10 @@ supabase==2.3.0
 # openpyxl==3.1.2
 
 # HTTP client
-httpx==0.27.0
+httpx>=0.27.0
 
 # Validation
-pydantic==2.5.3
+pydantic>=2.5.3
 
 # Geo calculations (Phase 1)
 geopy==2.4.1

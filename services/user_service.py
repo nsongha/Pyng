@@ -4,7 +4,7 @@ CRUD operations cho bảng `users`.
 Business logic: đăng ký, duyệt, kiểm tra admin.
 """
 
-from db.client import get_client
+from db import client as db
 from config.settings import ADMIN_TELEGRAM_IDS
 
 
@@ -22,19 +22,13 @@ def register_user(
     Raises:
         Exception: Nếu user đã tồn tại (telegram_id unique constraint).
     """
-    client = get_client()
-    result = (
-        client.table("users")
-        .insert({
-            "telegram_id": telegram_id,
-            "telegram_username": telegram_username,
-            "full_name": full_name,
-            "email": email,
-            "is_active": False,  # pending, chờ admin duyệt
-        })
-        .execute()
-    )
-    return result.data[0] if result.data else {}
+    return db.insert("users", {
+        "telegram_id": telegram_id,
+        "telegram_username": telegram_username,
+        "full_name": full_name,
+        "email": email,
+        "is_active": False,  # pending, chờ admin duyệt
+    })
 
 
 def get_by_telegram_id(telegram_id: int) -> dict | None:
@@ -43,14 +37,8 @@ def get_by_telegram_id(telegram_id: int) -> dict | None:
     Returns:
         dict | None: User record hoặc None nếu không tìm thấy.
     """
-    client = get_client()
-    result = (
-        client.table("users")
-        .select("*")
-        .eq("telegram_id", telegram_id)
-        .execute()
-    )
-    return result.data[0] if result.data else None
+    rows = db.select("users", filters={"telegram_id": telegram_id})
+    return rows[0] if rows else None
 
 
 def activate_user(telegram_id: int) -> dict | None:
@@ -59,14 +47,11 @@ def activate_user(telegram_id: int) -> dict | None:
     Returns:
         dict | None: Updated user record.
     """
-    client = get_client()
-    result = (
-        client.table("users")
-        .update({"is_active": True})
-        .eq("telegram_id", telegram_id)
-        .execute()
+    return db.update(
+        "users",
+        {"is_active": True},
+        filters={"telegram_id": telegram_id},
     )
-    return result.data[0] if result.data else None
 
 
 def reject_user(telegram_id: int) -> bool:
@@ -75,15 +60,11 @@ def reject_user(telegram_id: int) -> bool:
     Returns:
         bool: True nếu xóa thành công.
     """
-    client = get_client()
-    result = (
-        client.table("users")
-        .delete()
-        .eq("telegram_id", telegram_id)
-        .eq("is_active", False)  # chỉ xóa pending users
-        .execute()
+    deleted = db.delete(
+        "users",
+        filters={"telegram_id": telegram_id, "is_active": False},
     )
-    return len(result.data) > 0 if result.data else False
+    return len(deleted) > 0
 
 
 def is_admin(telegram_id: int) -> bool:
@@ -100,11 +81,4 @@ def get_all_active_users() -> list[dict]:
     Returns:
         list[dict]: List of active user records.
     """
-    client = get_client()
-    result = (
-        client.table("users")
-        .select("*")
-        .eq("is_active", True)
-        .execute()
-    )
-    return result.data or []
+    return db.select("users", filters={"is_active": True})

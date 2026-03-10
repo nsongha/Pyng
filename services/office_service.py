@@ -3,7 +3,7 @@
 CRUD operations cho bảng `offices` và `wifi_whitelist`.
 """
 
-from db.client import get_client
+from db import client as db
 
 
 def get_active_office() -> dict | None:
@@ -12,15 +12,8 @@ def get_active_office() -> dict | None:
     Returns:
         dict | None: Office record hoặc None.
     """
-    client = get_client()
-    result = (
-        client.table("offices")
-        .select("*")
-        .eq("is_active", True)
-        .limit(1)
-        .execute()
-    )
-    return result.data[0] if result.data else None
+    rows = db.select("offices", filters={"is_active": True}, limit=1)
+    return rows[0] if rows else None
 
 
 def update_geofence_radius(office_id: int, radius_m: int) -> dict | None:
@@ -33,14 +26,11 @@ def update_geofence_radius(office_id: int, radius_m: int) -> dict | None:
     Returns:
         dict | None: Updated office record.
     """
-    client = get_client()
-    result = (
-        client.table("offices")
-        .update({"radius_m": radius_m})
-        .eq("id", office_id)
-        .execute()
+    return db.update(
+        "offices",
+        {"radius_m": radius_m},
+        filters={"id": office_id},
     )
-    return result.data[0] if result.data else None
 
 
 def get_wifi_whitelist(office_id: int | None = None) -> list[dict]:
@@ -52,14 +42,11 @@ def get_wifi_whitelist(office_id: int | None = None) -> list[dict]:
     Returns:
         list[dict]: List of WiFi whitelist records.
     """
-    client = get_client()
-    query = client.table("wifi_whitelist").select("*").eq("is_active", True)
-
+    filters: dict = {"is_active": True}
     if office_id is not None:
-        query = query.eq("office_id", office_id)
+        filters["office_id"] = office_id
 
-    result = query.execute()
-    return result.data or []
+    return db.select("wifi_whitelist", filters=filters)
 
 
 def add_wifi_ssid(
@@ -79,7 +66,6 @@ def add_wifi_ssid(
     Returns:
         dict: Record vừa tạo.
     """
-    client = get_client()
     data = {
         "office_id": office_id,
         "ssid": ssid,
@@ -88,8 +74,7 @@ def add_wifi_ssid(
     if description:
         data["description"] = description
 
-    result = client.table("wifi_whitelist").insert(data).execute()
-    return result.data[0] if result.data else {}
+    return db.insert("wifi_whitelist", data)
 
 
 def remove_wifi_ssid(ssid_id: int) -> bool:
@@ -101,11 +86,9 @@ def remove_wifi_ssid(ssid_id: int) -> bool:
     Returns:
         bool: True nếu xóa thành công.
     """
-    client = get_client()
-    result = (
-        client.table("wifi_whitelist")
-        .update({"is_active": False})
-        .eq("id", ssid_id)
-        .execute()
+    result = db.update(
+        "wifi_whitelist",
+        {"is_active": False},
+        filters={"id": ssid_id},
     )
-    return len(result.data) > 0 if result.data else False
+    return result is not None

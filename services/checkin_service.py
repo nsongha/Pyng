@@ -6,7 +6,7 @@ Business logic: check-in, check-out, WFH, duplicate check, working hours.
 
 from datetime import datetime, timedelta
 
-from db.client import get_client
+from db import client as db
 from config.settings import WFH_LIMIT_PER_MONTH
 from config.timezone import get_tz
 
@@ -70,7 +70,6 @@ def create_checkin(
     Returns:
         dict: Checkin record vừa tạo.
     """
-    client = get_client()
     data = {
         "user_id": user_id,
         "type": checkin_type,
@@ -94,8 +93,7 @@ def create_checkin(
     if note is not None:
         data["note"] = note
 
-    result = client.table("checkins").insert(data).execute()
-    return result.data[0] if result.data else {}
+    return db.insert("checkins", data)
 
 
 def get_today_checkin(user_id: int, checkin_type: str = "in") -> dict | None:
@@ -108,20 +106,19 @@ def get_today_checkin(user_id: int, checkin_type: str = "in") -> dict | None:
     Returns:
         dict | None: Checkin record hoặc None.
     """
-    client = get_client()
     start, end = _today_range()
-    result = (
-        client.table("checkins")
-        .select("*")
-        .eq("user_id", user_id)
-        .eq("type", checkin_type)
-        .gte("checked_at", start)
-        .lt("checked_at", end)
-        .order("checked_at", desc=True)
-        .limit(1)
-        .execute()
+    rows = db.select(
+        "checkins",
+        filters={
+            "user_id": user_id,
+            "type": checkin_type,
+            "checked_at.gte": start,
+            "checked_at.lt": end,
+        },
+        order="checked_at.desc",
+        limit=1,
     )
-    return result.data[0] if result.data else None
+    return rows[0] if rows else None
 
 
 def has_checked_in_today(user_id: int) -> bool:
@@ -172,19 +169,19 @@ def get_wfh_count_this_month(user_id: int) -> int:
     Returns:
         int: Số lần WFH.
     """
-    client = get_client()
     start, end = _current_month_range()
-    result = (
-        client.table("checkins")
-        .select("id", count="exact")
-        .eq("user_id", user_id)
-        .eq("type", "in")
-        .eq("method", "wfh")
-        .gte("checked_at", start)
-        .lt("checked_at", end)
-        .execute()
+    return db.select(
+        "checkins",
+        columns="id",
+        filters={
+            "user_id": user_id,
+            "type": "in",
+            "method": "wfh",
+            "checked_at.gte": start,
+            "checked_at.lt": end,
+        },
+        count=True,
     )
-    return result.count or 0
 
 
 def create_wfh_checkin(user_id: int, note: str | None = None) -> dict:
