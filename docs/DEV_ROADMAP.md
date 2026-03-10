@@ -25,7 +25,6 @@ Week 1          Week 2          Week 3          Week 4
 - [x] Kết nối Supabase, khởi tạo schema (10 tables + seed data)
 - [x] Deploy bot lên Vercel Serverless (https://pyng.vercel.app)
 - [x] CI/CD: GitHub → Vercel auto deploy khi push main
-- [ ] Setup GitHub Actions Cron workflows (nhắc, báo cáo, QR refresh)
 
 **Done when**: ~~Bot phản hồi `/start` trả về "Hello World" từ Vercel~~ ✅ Done
 
@@ -54,6 +53,7 @@ Week 1          Week 2          Week 3          Week 4
 - [ ] Scheduler: nhắc check-out buổi chiều
 - [ ] Check-out flow
 - [ ] WFH flow
+- [ ] Setup GitHub Actions Cron workflows (nhắc, báo cáo, QR refresh) ← dời từ Phase 0
 
 **Done when**: 5 người test được check-in GPS + WiFi mỗi ngày
 
