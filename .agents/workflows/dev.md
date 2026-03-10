@@ -1,51 +1,64 @@
 ---
-description: Workflow phát triển feature mới
+description: Khởi động dev server và test bot locally
 ---
 
-> Workflow phát triển feature mới — tích hợp skills theo từng bước.
+# /dev — Dev Server Workflow
 
-## 1. Đọc context
+## Vấn đề cần tránh
 
-- Đọc `docs/PROJECT_CONTEXT.md` trước tiên
-- Đọc `docs/ARCHITECTURE.md` nếu liên quan đến DB/API
-- Đọc `docs/BOT_FLOWS.md` nếu liên quan đến conversation flow
+Vercel functions chạy serverless — mỗi request = 1 invocation riêng.
+Khi dev locally, cần dùng polling mode thay vì webhook.
 
-## 2. Phân tích yêu cầu
+## Quy trình chuẩn
 
-- Feature này thay đổi **Bot** (handlers), **Mini App** (React), hay cả hai?
-- Có ảnh hưởng tới DB schema không? → đọc `docs/ARCHITECTURE.md` §2
-- Cần thêm API endpoint mới không? → invoke skill `api-design-principles`
-- Feature phức tạp (> 3 modules)? → invoke skill `architecture-patterns`
+### 1. Setup local venv (lần đầu)
 
-## 3. Plan theo skill phù hợp
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-| Scope thay đổi        | Skill cần đọc trước khi code                            |
-| --------------------- | ------------------------------------------------------- |
-| Bot handler/validator | `telegram-bot-builder`                                  |
-| Mini App (TWA)        | `telegram-mini-app`                                     |
-| API endpoint mới      | `api-design-principles` + `api-security-best-practices` |
-| DB query/schema       | `postgres-best-practices`                               |
-| Async logic           | `async-python-patterns`                                 |
+### 2. Test bot locally (polling mode)
 
-Nếu phức tạp (> 3 files): viết implementation plan trước.
+// turbo
 
-## 4. Implement — follow skills
+```bash
+source .venv/bin/activate
+python3 -c "
+from bot.app import create_bot
+app = create_bot()
+print('🤖 Bot running in polling mode...')
+app.run_polling()
+"
+```
 
-- **Python code:** follow `python-pro` (type hints, modern syntax, clean structure)
-- **Async handlers:** follow `async-python-patterns` (async/await, error handling)
-- **FastAPI endpoints:** follow `python-fastapi-development` + `pydantic-models-py`
-- **DB queries:** follow `postgres-best-practices` (indexes, parameterized queries)
-- **Supabase calls:** follow `supabase-automation` (RLS, correct client usage)
-- **React components:** follow `react-best-practices` (performance, hooks)
-- **Tailwind styling:** follow `tailwind-patterns` (design tokens, responsive)
+> **Lưu ý**: Khi chạy polling, phải TẮT webhook trước:
+> `curl https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/deleteWebhook`
+> Sau khi test xong, SET LẠI webhook:
+> `curl https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook?url=https://pyng.vercel.app/api/webhook`
 
-## 5. Test
+### 3. Test Vercel functions locally
 
-- Invoke skill `test-driven-development` — viết test trước nếu logic phức tạp
-- Chạy bot (polling mode) và test trên Telegram
-- Test edge cases — xem `docs/KNOWN_ISSUES.md`
+// turbo
 
-## 6. Hoàn tất
+```bash
+vercel dev
+```
 
-- Chạy `/code-review` checklist
-- Chạy `/task-completion`
+> Truy cập `http://localhost:3000/api/webhook` để test
+
+### 4. Deploy production
+
+// turbo
+
+```bash
+vercel --prod --yes
+```
+
+## Nguyên tắc
+
+- **Local dev** → polling mode (không cần webhook URL)
+- **Production** → webhook mode (Vercel serverless)
+- **LUÔN** set lại webhook sau khi test local xong
+- Test trên Telegram mobile (iOS/Android) trước khi claim done

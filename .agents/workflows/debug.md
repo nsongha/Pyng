@@ -1,47 +1,68 @@
 ---
-description: Quy trình debug systematic khi gặp lỗi
+description: Quy trình debug có hệ thống dựa trên systematic-debugging skill
 ---
 
-> Quy trình debug systematic — tích hợp skill `systematic-debugging`.
+# Debug Workflow
 
-## 0. Check KNOWN_ISSUES trước
+> Tham khảo chi tiết skill `@systematic-debugging` trước khi bắt đầu.
 
-- Đọc `docs/KNOWN_ISSUES.md` — bug có thể đã documented + có workaround sẵn
-- Search issues theo keyword lỗi đang gặp
+## 1. Reproduce
 
-## 1. Thu thập thông tin (`systematic-debugging`)
+- Xác nhận bug: reproduce được bằng steps cụ thể
+- Ghi lại: Telegram message, input, expected vs actual behavior
+- Screenshot / error log nếu có
 
-- Đọc error message **đầy đủ** — không chỉ dòng cuối
-- Xác định file + line number gây lỗi
-- Kiểm tra git log nếu nghi regression:
+## 2. Root Cause Investigation
 
-```bash
-git log --oneline -10
-```
+// turbo
 
-## 2. Reproduce
+- Đọc error logs, stack traces
+- Kiểm tra recent changes: `git log -5 --oneline`
+- Trace execution path từ input → output
+- Xác định scope: bot handler? service? database? Vercel?
 
-- Chạy lại server/app và trigger lỗi
-- Ghi lại exact steps để reproduce
-- Xác định: lỗi xảy ra **luôn** hay **intermittent**?
+### Bot/API debug
 
-## 3. Isolate
+// turbo
 
-- Thu hẹp phạm vi: module nào gây lỗi?
-- Thêm `logging.debug()` tạm tại các điểm nghi ngờ (follow `python-pro`)
-- Kiểm tra data flow: input → processing → output
-- **Supabase issues:** check RLS policies, connection string (`postgres-best-practices`)
-- **Telegram API issues:** check rate limits, webhook status (`telegram-bot-builder`)
-- **Async issues:** check deadlocks, missing await (`async-python-patterns`)
+- Vercel function logs → `vercel logs pyng.vercel.app`
+- Telegram webhook info → `curl https://api.telegram.org/bot$TOKEN/getWebhookInfo`
+- Test webhook endpoint → `curl -X POST https://pyng.vercel.app/api/webhook -d '...'`
+- Check pending updates → `pending_update_count` trong webhook info
+
+### Database debug
+
+// turbo
+
+- Supabase REST API → test query trực tiếp
+- Check data integrity → `supabase db dump --data-only`
+- Migration status → `supabase migration list`
+- RLS policies → verify service_role vs anon key access
+
+## 3. Hypothesis
+
+- Đặt giả thuyết: "Lỗi vì [X] xảy ra khi [Y]"
+- Verify giả thuyết bằng evidence (logs, API responses)
+- Nếu cần → thêm print/logging tạm để trace
 
 ## 4. Fix
 
-- Sửa đúng root cause, không patch symptoms
-- Chỉ sửa trong phạm vi bug — không refactor kèm
-- Follow skill tương ứng với domain bị lỗi
+- Fix ĐÚNG root cause, KHÔNG fix symptom
+- Phạm vi fix tối thiểu — KHÔNG refactor thêm
+- Thêm error handling nếu case chưa được xử lý
 
 ## 5. Verify
 
-- Confirm bug đã fix — chạy lại steps ở bước 2
-- Kiểm tra không gây regression ở chỗ khác
-- Update `docs/KNOWN_ISSUES.md` nếu phát hiện edge case mới
+// turbo
+
+- Bug không còn reproduce
+  // turbo
+- `python3 -m py_compile <fixed_file>` — syntax OK
+- Deploy thành công: `vercel --prod --yes`
+- Test trên Telegram: gửi command và verify reply
+- Kiểm tra side effects trên modules liên quan
+
+## 6. Commit
+
+- Chạy workflow `/task-completion`
+- Commit message: `fix: <mô tả lỗi đã sửa tiếng Việt>`

@@ -1,48 +1,108 @@
 ---
-description: Checklist review code tự động trước khi commit
+description: Quy trình code review tự động dựa trên code-review-checklist skill
 ---
 
-> Checklist review code trước khi commit — dựa trên skills đã cài.
+# /code-review — Automated Code Review
 
-## 1. Python Code Quality (`python-pro`)
+> Dùng khi: hoàn thành 1 phase, trước khi release, hoặc khi muốn kiểm tra chất lượng code.
 
-- [ ] Type hints đầy đủ cho function params và return
-- [ ] Không có `print()` debug còn sót — dùng `logging` module
-- [ ] Functions < 50 lines, single responsibility
-- [ ] Naming rõ ràng: snake_case cho functions/variables
-- [ ] Không hardcoded values (paths, URLs, credentials)
+## 1. Xác định scope review
 
-## 2. Async Patterns (`async-python-patterns`)
+// turbo
 
-- [ ] Dùng `async/await` đúng cách — không block event loop
-- [ ] `asyncio.sleep()` thay `time.sleep()` trong async context
-- [ ] Error handling: `try/except` bao quanh external calls (Telegram API, Supabase)
-- [ ] Timeout cho mọi external call
+```bash
+git diff --name-only HEAD~1
+```
 
-## 3. API & Security (`api-security-best-practices`)
+- Liệt kê files đã thay đổi
+- Xác định modules bị ảnh hưởng
+- Nếu > 20 files → chia theo module, review từng nhóm
 
-- [ ] Không có secrets/keys trong code — dùng env vars
-- [ ] Input validation cho mọi API endpoint (`pydantic-models-py`)
-- [ ] CORS config chỉ allow origins cần thiết
-- [ ] JWT validation cho Mini App API
-- [ ] SQL injection protection — parameterized queries only
+## 2. Đọc context
 
-## 4. Database (`postgres-best-practices`)
+- Đọc `docs/PROJECT_CONTEXT.md` → hiểu project conventions
+- Đọc `docs/KNOWN_ISSUES.md` → tránh report lại issue đã biết
+- Đọc `docs/DECISIONS.md` → hiểu tại sao code viết theo cách hiện tại
 
-- [ ] Không có N+1 queries
-- [ ] Index cho columns thường query (user_id, checked_at)
-- [ ] Supabase RLS enabled cho tables mới
-- [ ] Migration SQL tested trên Supabase SQL Editor
+## 3. Review theo checklist
 
-## 5. Frontend — Mini App (`react-best-practices` + `tailwind-patterns`)
+Duyệt theo thứ tự ưu tiên (dừng ngay nếu có P0):
 
-- [ ] Components không quá lớn — tách nhỏ nếu > 100 lines
-- [ ] Hooks đúng rules (không gọi conditional, không trong loop)
-- [ ] Tailwind classes consistent với design tokens Pyng (`--pyng-red`, `--pyng-dark`)
-- [ ] Responsive trên mobile (Telegram Mini App chủ yếu dùng trên mobile)
+### P0 — Security (block release)
 
-## 6. Docs
+- [ ] Input validation trên MỌI user input (Telegram messages, callback data)
+- [ ] Không hardcode secrets/credentials (bot token, db password)
+- [ ] SQL injection prevention (parameterized queries / ORM)
+- [ ] Telegram user ID validation trên mọi handler
+- [ ] Không expose sensitive data trong bot responses
+- [ ] Webhook endpoint chỉ accept Telegram requests
 
-- [ ] CHANGELOG.md cập nhật nếu có feature/fix mới
-- [ ] PROJECT_CONTEXT.md cập nhật nếu thay đổi kiến trúc
-- [ ] KNOWN_ISSUES.md cập nhật nếu phát hiện/resolve bug
+### P1 — Functionality & Correctness
+
+- [ ] Code giải quyết đúng vấn đề đặt ra
+- [ ] Edge cases: null, empty, boundary values
+- [ ] Error states có response/UI phù hợp
+- [ ] Không break backward compatibility
+- [ ] Type hints đầy đủ (Python typing)
+- [ ] Async/await dùng đúng (không block event loop)
+
+### P2 — Code Quality & Performance
+
+- [ ] Single Responsibility — mỗi function/file 1 việc
+- [ ] Naming rõ ràng, self-documenting
+- [ ] Không N+1 queries
+- [ ] File size hợp lý (< 300 dòng)
+- [ ] Business logic tách khỏi handler/controller
+
+### P3 — Documentation & Tests
+
+- [ ] Commit message theo Conventional Commits
+- [ ] Docstrings cho functions phức tạp
+- [ ] docs/ updated (nếu command mới)
+
+## 4. Output Report
+
+Tạo report theo format:
+
+```markdown
+## Code Review Report — [Phase/Feature]
+
+**Scope**: N files, M modules
+**Date**: YYYY-MM-DD
+
+### 🔴 P0 — Critical (block release)
+
+- [file:line] Mô tả issue + đề xuất fix
+
+### 🟠 P1 — Important
+
+- [file:line] Mô tả issue + đề xuất fix
+
+### 🟡 P2 — Improvement
+
+- [file:line] Mô tả issue
+
+### 🟢 P3 — Nitpick
+
+- [file:line] Mô tả
+
+### Summary
+
+- P0: X issues (PHẢI fix trước release)
+- P1: X issues (nên fix)
+- P2: X issues (fix khi rảnh)
+- P3: X issues (optional)
+```
+
+## 5. Action
+
+- **Có P0** → DỪNG, fix NGAY, chạy `/task-completion`
+- **Chỉ P1** → Tạo task fix, có thể release nếu urgent
+- **Chỉ P2/P3** → Ghi vào `docs/KNOWN_ISSUES.md` mục Tech Debt, release bình thường
+
+## LƯU Ý
+
+- KHÔNG review style/formatting — đó là việc của linter
+- KHÔNG review code ngoài scope (chỉ xem diff)
+- Focus vào **behavior correctness** và **security**, không phải personal preference
+- Nếu phát hiện pattern lặp lại → đề xuất thêm vào skill hoặc lint rule
