@@ -43,3 +43,5 @@ miniapp/dist/
 
 # Antigravity / Gemini
 .gemini/
+.vercel
+.env*.local
