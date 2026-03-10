@@ -72,6 +72,7 @@ vercel --prod --yes
 #### Hiếm khi thay đổi:
 
 - [ ] `docs/PRD.md` — thay đổi scope sản phẩm lớn
+- [ ] `docs/APP_DESCRIPTION.md` — thay đổi mô tả sản phẩm, tính năng chính
 - [ ] `docs/USAGE.md` — thêm tính năng mà user cần biết cách dùng
 - [ ] `docs/GAMIFICATION_DESIGN.md` — thay đổi hệ thống gamification
 - [ ] `docs/PRIVACY_POLICY.md` — thu thập data mới hoặc thay đổi chính sách
