@@ -118,9 +118,14 @@ GitHub Actions (Cron)
 ### Bot Engine (`bot/`)
 
 - `bot/app.py` — Application factory, đăng ký handlers
+- `bot/handlers/_helpers.py` — Shared utils (get_active_user, ontime status, time format)
 - `bot/handlers/start.py` — Registration flow (ConversationHandler: tên → email → chờ duyệt)
 - `bot/handlers/admin.py` — Admin approval, GPS settings, WiFi management
-- `bot/handlers/checkin.py` — GPS/WiFi check-in, checkout, WFH flow
+- `bot/handlers/checkin.py` — Re-export module (backward compatible)
+- `bot/handlers/gps_checkin.py` — GPS check-in (/checkin + location)
+- `bot/handlers/wifi_checkin.py` — WiFi check-in (/checkin_wifi)
+- `bot/handlers/checkout.py` — Check-out (/checkout)
+- `bot/handlers/wfh.py` — WFH flow (/wfh)
 - `bot/validators/gps_validator.py` — Geofence check (geopy), spoofing detection
 - `bot/validators/wifi_validator.py` — SSID whitelist validation
 
@@ -145,6 +150,7 @@ GitHub Actions (Cron)
 ### Config (`config/`)
 
 - `config/settings.py` — Centralized settings từ env vars (pydantic)
+- `config/timezone.py` — Shared timezone helper (singleton ZoneInfo)
 
 ### QR Display (`qr/`)
 

@@ -29,6 +29,16 @@
   - `api/cron/evening.py` — Nhắc check-out 17:45 cho users đã check-in chưa checkout
   - `.github/workflows/cron-reminders.yml` — GitHub Actions cron (weekdays, UTC+7)
 
+### refactor
+
+- **Code review Phase 1**: Fix toàn bộ P1+P2+P3 issues
+  - Tách `checkin.py` (423 dòng) thành 5 files: `gps_checkin.py`, `wifi_checkin.py`, `checkout.py`, `wfh.py`, `_helpers.py`
+  - Sanitize error responses (không leak `str(e)` qua HTTP)
+  - Tạo `config/timezone.py` — shared timezone helper (bỏ duplicate pattern)
+  - Fix admin double `query.answer()`
+  - Fix `OFFICE_WIFI_SSIDS` parsing edge case
+  - Chuyển tất cả `print()` → `logging` module
+
 ### docs
 
 - Sửa ARCHITECTURE.md: sơ đồ kiến trúc Railway→Vercel, bỏ Redis & S3
