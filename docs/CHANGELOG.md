@@ -36,6 +36,11 @@
   - Deploy: https://pyng.vercel.app
   - Bot: @pyng85111_bot
 
+### chore
+
+- Sync 7 workflows từ templates → adapt cho Pyng tech stack
+- Thêm mới: `docs-update.md`, `new-feature.md`
+
 ---
 
 _Pyng — "Ping your presence" — BSMlabs Check-in Bot_
