@@ -1,0 +1,76 @@
+# =============================================================
+# Pyng — Cron Reminders (Morning Check-in & Evening Check-out)
+# =============================================================
+# Trigger: GitHub Actions cron schedule, weekdays only.
+#
+# Morning: 8:30 AM UTC+7 = 01:30 UTC → nhắc check-in
+# Evening: 17:45 PM UTC+7 = 10:45 UTC → nhắc check-out
+#
+# Secrets cần set:
+#   CRON_SECRET  — token xác thực cron endpoint
+#   WEBHOOK_URL  — base URL Vercel (e.g. https://pyng.vercel.app)
+# =============================================================
+
+name: Cron Reminders
+
+on:
+  schedule:
+    # Morning reminder: 8:30 AM UTC+7 = 01:30 UTC, thứ 2-6
+    - cron: "30 1 * * 1-5"
+    # Evening reminder: 17:45 PM UTC+7 = 10:45 UTC, thứ 2-6
+    - cron: "45 10 * * 1-5"
+
+  # Cho phép trigger manual để test
+  workflow_dispatch:
+    inputs:
+      reminder_type:
+        description: "Loại nhắc nhở (morning / evening)"
+        required: true
+        default: "morning"
+        type: choice
+        options:
+          - morning
+          - evening
+
+jobs:
+  send-reminder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Determine reminder type
+        id: type
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "reminder=${{ github.event.inputs.reminder_type }}" >> $GITHUB_OUTPUT
+          else
+            # Xác định theo giờ UTC hiện tại
+            HOUR=$(date -u +%H)
+            if [ "$HOUR" = "01" ]; then
+              echo "reminder=morning" >> $GITHUB_OUTPUT
+            else
+              echo "reminder=evening" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Send ${{ steps.type.outputs.reminder }} reminder
+        run: |
+          ENDPOINT="${{ secrets.WEBHOOK_URL }}/api/cron/${{ steps.type.outputs.reminder }}"
+          echo "🔔 Calling: $ENDPOINT"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$ENDPOINT" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "📬 Status: $HTTP_CODE"
+          echo "📄 Response: $BODY"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Cron request failed with status $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "✅ Reminder sent successfully"

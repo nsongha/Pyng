@@ -100,9 +100,9 @@
 
 | #   | Task                                                                                   | Status | Priority | Dependencies | Files affected                         |
 | --- | -------------------------------------------------------------------------------------- | ------ | -------- | ------------ | -------------------------------------- |
-| C1  | Tạo cron morning reminder endpoint (`/api/cron/morning.py`) — gửi nhắc check-in 8:30   | 📋     | P0       | A3           | `api/cron/morning.py`                  |
-| C2  | Tạo cron evening reminder endpoint (`/api/cron/evening.py`) — gửi nhắc check-out 17:45 | 📋     | P1       | A3, A4       | `api/cron/evening.py`                  |
-| C3  | Setup GitHub Actions Cron workflows (morning 8:30, evening 17:45)                      | 📋     | P1       | C1, C2       | `.github/workflows/cron-reminders.yml` |
+| C1  | Tạo cron morning reminder endpoint (`/api/cron/morning.py`) — gửi nhắc check-in 8:30   | ✅     | P0       | A3           | `api/cron/morning.py`                  |
+| C2  | Tạo cron evening reminder endpoint (`/api/cron/evening.py`) — gửi nhắc check-out 17:45 | ✅     | P1       | A3, A4       | `api/cron/evening.py`                  |
+| C3  | Setup GitHub Actions Cron workflows (morning 8:30, evening 17:45)                      | ✅     | P1       | C1, C2       | `.github/workflows/cron-reminders.yml` |
 
 **Acceptance Criteria:**
 
@@ -133,12 +133,12 @@
 
 ## Progress Summary
 
-| Stream                 | Total  | Done   | Remaining | %       |
-| ---------------------- | ------ | ------ | --------- | ------- |
-| 🛢️ Database & Services | 7      | 7      | 0         | 100%    |
-| 🤖 Bot Handlers        | 8      | 8      | 0         | 100%    |
-| ⏰ Infra & Cron        | 3      | 0      | 3         | 0%      |
-| **TOTAL**              | **18** | **15** | **3**     | **83%** |
+| Stream                 | Total  | Done   | Remaining | %        |
+| ---------------------- | ------ | ------ | --------- | -------- |
+| 🛢️ Database & Services | 7      | 7      | 0         | 100%     |
+| 🤖 Bot Handlers        | 8      | 8      | 0         | 100%     |
+| ⏰ Infra & Cron        | 3      | 3      | 0         | 100%     |
+| **TOTAL**              | **18** | **18** | **0**     | **100%** |
 
 ---
 
