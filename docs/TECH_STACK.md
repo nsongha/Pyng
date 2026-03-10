@@ -46,8 +46,8 @@ python-telegram-bot[webhooks]
 # Database
 sqlalchemy==2.0.25
 asyncpg==0.29.0
-alembic==1.13.1
-supabase==2.3.0
+# Database — gọi Supabase PostgREST API trực tiếp qua httpx
+# (không dùng supabase SDK — conflict httpx version với python-telegram-bot)
 
 # QR Code
 qrcode[pil]==7.4.2

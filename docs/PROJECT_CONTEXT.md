@@ -144,7 +144,7 @@ GitHub Actions (Cron)
 
 ### Database (`db/`)
 
-- `db/client.py` — Supabase client (singleton, service_role_key)
+- `db/client.py` — REST wrapper qua httpx (PostgREST API, service_role_key)
 - `db/schema.sql` — 10 tables + indexes + RLS
 
 ### Config (`config/`)

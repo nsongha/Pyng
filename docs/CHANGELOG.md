@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+### fix
+
+- **Vercel deploy**: Bỏ `supabase` SDK — conflict httpx version với `python-telegram-bot`
+  - Rewrite `db/client.py` → lightweight REST wrapper qua `httpx` (gọi PostgREST API trực tiếp)
+  - Update `services/user_service.py`, `checkin_service.py`, `office_service.py` dùng REST client mới
+  - Zero new dependencies — `httpx` đã có sẵn qua `python-telegram-bot`
+
 ### feat
 
 - **Phase 1 — Wave 1**: Database & Services foundation
