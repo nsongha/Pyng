@@ -1,32 +1,32 @@
 # Bot core
 python-telegram-bot==21.5
-python-telegram-bot[webhooks]
-
-# Database
-sqlalchemy==2.0.25
-asyncpg==0.29.0
-alembic==1.13.1
-supabase==2.3.0
-
-# QR Code
-qrcode[pil]==7.4.2
-Pillow==10.2.0
-
-# Report
-openpyxl==3.1.2
 
 # Utilities
 python-dotenv==1.0.0
+
+# Database (Phase 1+)
+# sqlalchemy==2.0.25
+# asyncpg==0.29.0
+# alembic==1.13.1
+# supabase==2.3.0
+
+# QR Code (Phase 1+)
+# qrcode[pil]==7.4.2
+# Pillow==10.2.0
+
+# Report (Phase 2+)
+# openpyxl==3.1.2
+
+# HTTP client
 httpx==0.26.0
+
+# Validation
 pydantic==2.5.3
 
-# Geo calculations
-geopy==2.4.1
+# Geo calculations (Phase 1+)
+# geopy==2.4.1
 
-# API (Mini App backend + Cron endpoints)
-fastapi==0.109.0
-uvicorn==0.27.0
-python-jose[cryptography]==3.3.0  # JWT
-
-# Optional: Face verification
-# requests==2.31.0
+# API / Mini App (Phase 2+)
+# fastapi==0.109.0
+# uvicorn==0.27.0
+# python-jose[cryptography]==3.3.0

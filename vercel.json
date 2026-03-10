@@ -1,12 +1,9 @@
 {
   "version": 2,
-  "functions": {
-    "api/**/*.py": {
-      "runtime": "@vercel/python@4.5.0"
-    }
+  "env": {
+    "PYTHONPATH": "."
   },
   "rewrites": [
-    { "source": "/api/webhook", "destination": "/api/webhook" },
     { "source": "/qr(.*)", "destination": "/qr/index.html" }
   ],
   "headers": [
