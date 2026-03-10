@@ -13,21 +13,21 @@ Week 1          Week 2          Week 3          Week 4
 
 ---
 
-## Phase 0 — Setup (Ngày 1–2)
+## Phase 0 — Setup ✅ (Hoàn thành 2026-03-10)
 
 **Mục tiêu**: Môi trường dev sẵn sàng, bot cơ bản chạy được
 
 **Tasks**:
 
-- [ ] Tạo repo GitHub, setup branch strategy (`main`, `dev`, `feature/*`)
-- [ ] Setup Python project, cài dependencies
-- [ ] Tạo bot trên BotFather
-- [ ] Kết nối Supabase, khởi tạo schema
-- [ ] Deploy bot rỗng lên Vercel Serverless (webhook hoạt động)
-- [ ] CI/CD: GitHub → Vercel auto deploy khi push main
+- [x] Tạo repo GitHub (`nsongha/Pyng`)
+- [x] Setup Python project, cài dependencies
+- [x] Tạo bot trên BotFather (`@pyng85111_bot`)
+- [x] Kết nối Supabase, khởi tạo schema (10 tables + seed data)
+- [x] Deploy bot lên Vercel Serverless (https://pyng.vercel.app)
+- [x] CI/CD: GitHub → Vercel auto deploy khi push main
 - [ ] Setup GitHub Actions Cron workflows (nhắc, báo cáo, QR refresh)
 
-**Done when**: Bot phản hồi `/start` trả về "Hello World" từ Vercel
+**Done when**: ~~Bot phản hồi `/start` trả về "Hello World" từ Vercel~~ ✅ Done
 
 ---
 
