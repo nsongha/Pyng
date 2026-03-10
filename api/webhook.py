@@ -8,13 +8,28 @@ import json
 import asyncio
 from http.server import BaseHTTPRequestHandler
 
-from telegram import Update
+from telegram import Update, Bot
 
-from bot.app import create_bot
+from config.settings import TELEGRAM_BOT_TOKEN
+from bot.handlers.start import start_command
 
 
-# Khởi tạo bot 1 lần (reuse giữa các invocations trên Vercel)
-app = create_bot()
+# Telegram Bot instance (lightweight, không cần Application cho webhook đơn giản)
+bot = Bot(token=TELEGRAM_BOT_TOKEN)
+
+
+async def process_webhook(data: dict) -> None:
+    """Parse và xử lý Telegram update."""
+    from telegram.ext import Application
+
+    # Tạo Application, initialize, process, shutdown
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).updater(None).build()
+    app.add_handler(__import__("telegram.ext", fromlist=["CommandHandler"]).CommandHandler("start", start_command))
+
+    async with app:
+        await app.process_update(
+            Update.de_json(data=data, bot=app.bot)
+        )
 
 
 class handler(BaseHTTPRequestHandler):
@@ -23,24 +38,22 @@ class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         """Xử lý webhook POST từ Telegram."""
         try:
-            # Đọc body
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length)
             data = json.loads(body)
 
-            # Parse Update và xử lý
-            update = Update.de_json(data=data, bot=app.bot)
-            asyncio.run(app.process_update(update))
+            # Chạy async handler
+            asyncio.run(process_webhook(data))
 
-            # Trả về 200 OK
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"ok": True}).encode())
 
         except Exception as e:
-            # Log lỗi nhưng vẫn trả 200 (tránh Telegram retry liên tục)
-            print(f"[Webhook Error] {e}")
+            print(f"[Webhook Error] {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
