@@ -8,23 +8,26 @@ import json
 import asyncio
 from http.server import BaseHTTPRequestHandler
 
-from telegram import Update, Bot
+from telegram import Update
 
-from config.settings import TELEGRAM_BOT_TOKEN
-from bot.handlers.start import start_command
+from bot.app import create_bot
 
 
-# Telegram Bot instance (lightweight, không cần Application cho webhook đơn giản)
-bot = Bot(token=TELEGRAM_BOT_TOKEN)
+# Tạo Application 1 lần (module-level) cho hiệu suất
+_app = None
+
+
+def _get_app():
+    """Lazy init bot application."""
+    global _app
+    if _app is None:
+        _app = create_bot()
+    return _app
 
 
 async def process_webhook(data: dict) -> None:
     """Parse và xử lý Telegram update."""
-    from telegram.ext import Application
-
-    # Tạo Application, initialize, process, shutdown
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).updater(None).build()
-    app.add_handler(__import__("telegram.ext", fromlist=["CommandHandler"]).CommandHandler("start", start_command))
+    app = _get_app()
 
     async with app:
         await app.process_update(

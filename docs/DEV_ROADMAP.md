@@ -36,23 +36,23 @@ Week 1          Week 2          Week 3          Week 4
 
 ### Tuần 1 - Ngày 3–5: User Registration & GPS
 
-- [ ] Đăng ký nhân viên (`/start` flow)
-- [ ] Admin approval flow
-- [ ] GPS check-in với geofence validation
-- [ ] Geopy distance calculation
-- [ ] GPS spoofing detection (speed check)
-- [ ] Lưu checkin vào DB
-- [ ] Response sau check-in (thành công / thất bại)
-- [ ] Admin set geofence qua bot (`/admin → GPS Settings`)
+- [x] Đăng ký nhân viên (`/start` flow)
+- [x] Admin approval flow
+- [x] GPS check-in với geofence validation
+- [x] Geopy distance calculation
+- [x] GPS spoofing detection (speed check)
+- [x] Lưu checkin vào DB
+- [x] Response sau check-in (thành công / thất bại)
+- [x] Admin set geofence qua bot (`/admin → GPS Settings`)
 
 ### Tuần 1 - Ngày 6–7: WiFi & Reminder
 
-- [ ] WiFi check-in flow
-- [ ] Admin quản lý WiFi whitelist
+- [x] WiFi check-in flow
+- [x] Admin quản lý WiFi whitelist
 - [ ] Scheduler: nhắc check-in buổi sáng
 - [ ] Scheduler: nhắc check-out buổi chiều
-- [ ] Check-out flow
-- [ ] WFH flow
+- [x] Check-out flow
+- [x] WFH flow
 - [ ] Setup GitHub Actions Cron workflows (nhắc, báo cáo, QR refresh) ← dời từ Phase 0
 
 **Done when**: 5 người test được check-in GPS + WiFi mỗi ngày
