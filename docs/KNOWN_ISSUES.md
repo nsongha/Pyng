@@ -22,13 +22,15 @@
 ## 🔴 Critical
 
 ### ISSUE-001: GPS giả mạo bằng mock location app
+
 **Severity**: Critical  
 **Status**: Partially Mitigated  
-**Affects**: GPS  
+**Affects**: GPS
 
 **Mô tả**: Android cho phép dùng app "Mock Location" để giả tọa độ GPS.
 
 **Workaround hiện tại**:
+
 - Kiểm tra tốc độ di chuyển bất thường (>500 km/h giữa 2 lần check-in)
 - Kiểm tra GPS accuracy: nếu accuracy = 0m (quá hoàn hảo) → nghi ngờ
 - Admin review log nếu thấy pattern bất thường
@@ -40,13 +42,15 @@
 ---
 
 ### ISSUE-002: Supabase free tier pause sau 1 tuần không active
+
 **Severity**: Critical  
 **Status**: Mitigated  
-**Affects**: All  
+**Affects**: All
 
 **Mô tả**: Supabase free tier tự pause project sau 7 ngày không có traffic.
 
 **Workaround**: Cron job ping database mỗi 3 ngày:
+
 ```python
 # scheduler.py
 scheduler.add_job(
@@ -64,9 +68,10 @@ scheduler.add_job(
 ## 🟠 High
 
 ### ISSUE-003: iOS NFC không hoạt động trên iPhone 6 trở xuống
+
 **Severity**: High  
 **Status**: Won't Fix  
-**Affects**: NFC  
+**Affects**: NFC
 
 **Mô tả**: iPhone 6 và cũ hơn không có NFC chip.
 
@@ -75,13 +80,15 @@ scheduler.add_job(
 ---
 
 ### ISSUE-004: QR scan trên Telegram Desktop không hoạt động
+
 **Severity**: High  
 **Status**: Open  
-**Affects**: QR  
+**Affects**: QR
 
 **Mô tả**: Telegram Desktop (PC/Mac) không có camera scan QR trực tiếp trong app.
 
 **Workaround**:
+
 - Dùng Telegram mobile để scan QR
 - Hoặc dùng camera ngoài app (scan → copy link → paste vào Telegram)
 
@@ -90,15 +97,17 @@ scheduler.add_job(
 ---
 
 ### ISSUE-005: WiFi SSID giống nhau ở nhiều nơi
+
 **Severity**: High  
 **Status**: Open  
-**Affects**: WiFi  
+**Affects**: WiFi
 
 **Mô tả**: SSID như "Vietnam Airlines WiFi" hay "Coffee WiFi" có thể trùng với WiFi văn phòng nếu đặt tên phổ biến.
 
 **Root Cause**: WiFi check chỉ dựa vào SSID (tên), không verify MAC address router.
 
-**Workaround**: 
+**Workaround**:
+
 - Đặt tên WiFi công ty độc đáo (ví dụ: "Acme_Corp_5G_2026")
 - Admin thêm mô tả rõ khi add SSID vào whitelist
 - Xem xét kết hợp GPS + WiFi (cả hai phải pass) cho môi trường cần bảo mật cao
@@ -108,13 +117,15 @@ scheduler.add_job(
 ---
 
 ### ISSUE-006: Telegram rate limiting khi gửi nhiều notification cùng lúc
+
 **Severity**: High  
 **Status**: Mitigated  
-**Affects**: Scheduler/Notifications  
+**Affects**: Scheduler/Notifications
 
 **Mô tả**: Telegram giới hạn 30 messages/second cho bot. Khi nhắc 50 người cùng lúc lúc 8:30 → có thể bị rate limit.
 
 **Workaround**:
+
 ```python
 # Gửi với delay nhỏ giữa các tin
 for user in users:
@@ -129,9 +140,10 @@ for user in users:
 ## 🟡 Medium
 
 ### ISSUE-007: Check-in lúc thay ca đêm (sau 23:00)
+
 **Severity**: Medium  
 **Status**: Open  
-**Affects**: All  
+**Affects**: All
 
 **Mô tả**: Auto check-out lúc 23:59 sẽ conflict nếu ai đó làm ca đêm và check-in sau 22:00.
 
@@ -142,9 +154,10 @@ for user in users:
 ---
 
 ### ISSUE-008: Multiple check-in cùng ngày khi ra ngoài rồi vào lại
+
 **Severity**: Medium  
 **Status**: Open  
-**Affects**: All  
+**Affects**: All
 
 **Mô tả**: Nhân viên ra ngoài ăn trưa → check-out → vào lại → check-in → hệ thống tính 2 record, báo cáo lộn xộn.
 
@@ -155,26 +168,30 @@ for user in users:
 ---
 
 ### ISSUE-009: GPS drift trong tòa nhà cao tầng
+
 **Severity**: Medium  
 **Status**: Won't Fix (limitation của GPS)  
-**Affects**: GPS  
+**Affects**: GPS
 
 **Mô tả**: Tòa nhà cao, nhiều kính có thể làm GPS drift xa hơn thực tế 50–200m.
 
-**Workaround**: 
+**Workaround**:
+
 - Tăng radius geofence lên 200m nếu văn phòng trong tòa nhà cao tầng
 - Khuyến khích dùng WiFi là primary method cho văn phòng trong tòa nhà
 
 ---
 
 ### ISSUE-010: NFC tag bị nhiễu khi đặt gần kim loại
+
 **Severity**: Medium  
 **Status**: Documented  
-**Affects**: NFC  
+**Affects**: NFC
 
 **Mô tả**: Tag NFC đặt gần khung cửa kim loại có thể giảm read range.
 
-**Workaround**: 
+**Workaround**:
+
 - Dùng "anti-metal NFC tag" (có lớp ferrite backing)
 - Dán cách khung kim loại ít nhất 2cm
 - Hoặc dán lên vật liệu nhựa/gỗ
@@ -182,9 +199,10 @@ for user in users:
 ---
 
 ### ISSUE-011: Bot không nhận file ảnh lớn khi manual check-in
+
 **Severity**: Medium  
 **Status**: Open  
-**Affects**: Manual Fallback  
+**Affects**: Manual Fallback
 
 **Mô tả**: Telegram giới hạn 20MB cho file qua bot. Camera hiện đại chụp RAW có thể vượt qưỡng.
 
@@ -197,9 +215,10 @@ for user in users:
 ## 🟢 Low
 
 ### ISSUE-012: Leaderboard không update real-time
+
 **Severity**: Low  
 **Status**: By Design  
-**Affects**: Gamification  
+**Affects**: Gamification
 
 **Mô tả**: Leaderboard cập nhật mỗi giờ, không phải real-time.
 
@@ -208,9 +227,10 @@ for user in users:
 ---
 
 ### ISSUE-013: Emoji không hiển thị đúng trên một số thiết bị Android cũ
+
 **Severity**: Low  
 **Status**: Won't Fix  
-**Affects**: UI/UX  
+**Affects**: UI/UX
 
 **Mô tả**: Android 7 trở xuống có thể không render được một số emoji mới (🏷️, 🦾...).
 
@@ -219,15 +239,34 @@ for user in users:
 ---
 
 ### ISSUE-014: Timezone mismatch nếu nhân viên đang ở nước ngoài
+
 **Severity**: Low  
 **Status**: Open  
-**Affects**: Scheduler, Report  
+**Affects**: Scheduler, Report
 
 **Mô tả**: Bot dùng timezone cố định (Asia/HCM). Nhân viên đang công tác ở nước khác nhận nhắc check-in lúc 3am giờ địa phương.
 
 **Workaround**: Nhân viên tự tắt notification tạm thời khi đi công tác.
 
 **Fix kế hoạch**: Thêm "vacation mode" — admin đánh dấu user đang công tác nước ngoài, tắt auto-remind.
+
+---
+
+## ✅ Resolved
+
+### ISSUE-015: Supabase Python SDK conflict httpx version → Vercel build fail
+
+**Severity**: Critical  
+**Status**: ✅ Resolved (2026-03-10)  
+**Affects**: Deploy
+
+**Mô tả**: `supabase==2.3.0` yêu cầu `httpx==0.24.1`, conflict với `python-telegram-bot==21.5` (cần `httpx~=0.27`). Vercel build fail ngay lập tức.
+
+**Root Cause**: Dependency conflict giữa 2 package chính.
+
+**Fix**: Bỏ `supabase` SDK, viết REST wrapper trong `db/client.py` gọi PostgREST API trực tiếp qua `httpx`. Xem ADR-012 trong DECISIONS.md.
+
+> ⚠️ **Phase sau lưu ý**: KHÔNG cài lại `supabase` SDK trừ khi version >= 2.10.0 (đã fix httpx conflict). Nếu cần Realtime/Auth (Phase 4), đánh giá lại thời điểm đó.
 
 ---
 

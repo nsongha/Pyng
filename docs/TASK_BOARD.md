@@ -45,8 +45,8 @@
 
 | #   | Task                                                                                                | Status | Priority | Dependencies | Files affected                     |
 | --- | --------------------------------------------------------------------------------------------------- | ------ | -------- | ------------ | ---------------------------------- |
-| A1  | Uncomment & cài đặt Phase 1 dependencies (`supabase`, `geopy`, `pydantic`)                          | ✅     | P0       | -            | `requirements.txt`                 |
-| A2  | Tạo Supabase DB client module (connection, query helpers)                                           | ✅     | P0       | A1           | `db/client.py`                     |
+| A1  | Cài đặt Phase 1 dependencies (`geopy`, `pydantic`; `httpx` qua telegram bot)                        | ✅     | P0       | -            | `requirements.txt`                 |
+| A2  | Tạo DB client module — REST wrapper qua httpx (⚠️ không dùng supabase SDK, xem ADR-012)             | ✅     | P0       | A1           | `db/client.py`                     |
 | A3  | Tạo `services/user_service.py` — CRUD users (register, get_by_telegram_id, update status, is_admin) | ✅     | P0       | A2           | `services/user_service.py`         |
 | A4  | Tạo `services/checkin_service.py` — create checkin, get today's checkin, check duplicate, checkout  | ✅     | P0       | A2           | `services/checkin_service.py`      |
 | A5  | Tạo `bot/validators/gps_validator.py` — geofence check, distance calc, spoofing detection           | ✅     | P0       | A1           | `bot/validators/gps_validator.py`  |
@@ -55,7 +55,7 @@
 
 **Acceptance Criteria:**
 
-- A2: `db/client.py` có thể query Supabase thành công (test insert/select)
+- A2: `db/client.py` gọi PostgREST API thành công qua httpx (⚠️ không dùng supabase SDK — xem ADR-012 trong DECISIONS.md)
 - A3: Register user, check exists, get by telegram_id hoạt động
 - A4: Tạo record checkin/checkout, lấy checkin hôm nay, chặn duplicate
 - A5: Tính distance chính xác, phát hiện spoofing (speed > 500km/h)

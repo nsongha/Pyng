@@ -17,7 +17,7 @@
 ### feat
 
 - **Phase 1 — Wave 1**: Database & Services foundation
-  - `db/client.py` — Supabase client (singleton, service_role_key)
+  - `db/client.py` — REST wrapper qua httpx (PostgREST API, service_role_key)
   - `services/user_service.py` — Register, activate, reject, is_admin
   - `services/checkin_service.py` — Checkin/checkout/WFH, working hours, duplicate check
   - `services/office_service.py` — Office CRUD, WiFi whitelist management
