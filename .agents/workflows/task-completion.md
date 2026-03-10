@@ -45,8 +45,8 @@ vercel --prod --yes
   - `docs:` cho documentation only
   - `chore:` cho tooling, config
 - Commit message bằng **tiếng Việt**, mô tả ngắn gọn
-- Ví dụ: `feat: thêm GPS check-in với geofence validation`
-- Body (optional): liệt kê các thay đổi chính, cũng bằng tiếng Việt
+- **Body BẮT BUỘC** khi commit ≥ 3 files hoặc type `feat:`/`chore:` (xem rule `git-workflow.md`)
+- Body liệt kê bullet points mô tả cụ thể từng thay đổi
 
 ### 4. Documentation Update — Checklist từng file
 
