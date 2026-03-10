@@ -48,7 +48,9 @@ QR_EXPIRE_SECONDS: int = int(os.getenv("QR_EXPIRE_SECONDS", "300"))
 # ==========================================
 # WiFi
 # ==========================================
-OFFICE_WIFI_SSIDS: list[str] = os.getenv("OFFICE_WIFI_SSIDS", "").split(",")
+OFFICE_WIFI_SSIDS: list[str] = [
+    x.strip() for x in os.getenv("OFFICE_WIFI_SSIDS", "").split(",") if x.strip()
+]
 
 # ==========================================
 # Admin

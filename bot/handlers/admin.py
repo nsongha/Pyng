@@ -5,6 +5,10 @@ B7: Admin GPS settings — set geofence radius.
 B8: Admin WiFi whitelist management — thêm/xóa SSID.
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ContextTypes,
@@ -37,11 +41,12 @@ ADMIN_WIFI_ACTION, ADMIN_WIFI_SSID = 101, 102
 async def handle_approval(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Xử lý khi admin bấm nút Duyệt."""
     query = update.callback_query
-    await query.answer()
 
     if not is_admin(query.from_user.id):
         await query.answer("⛔ Bạn không có quyền admin.", show_alert=True)
         return
+
+    await query.answer()
 
     # Parse telegram_id từ callback_data: "approve_123456789"
     telegram_id = int(query.data.split("_")[1])
@@ -66,7 +71,7 @@ async def handle_approval(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 parse_mode="Markdown",
             )
         except Exception as e:
-            print(f"[Admin] Cannot notify user {telegram_id}: {e}")
+            logger.warning("Cannot notify user %s: %s", telegram_id, e)
     else:
         await query.edit_message_text(
             text=query.message.text + "\n\n❌ Lỗi: Không tìm thấy user.",
@@ -76,11 +81,12 @@ async def handle_approval(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def handle_rejection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Xử lý khi admin bấm nút Từ chối."""
     query = update.callback_query
-    await query.answer()
 
     if not is_admin(query.from_user.id):
         await query.answer("⛔ Bạn không có quyền admin.", show_alert=True)
         return
+
+    await query.answer()
 
     telegram_id = int(query.data.split("_")[1])
 
@@ -102,7 +108,7 @@ async def handle_rejection(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             ),
         )
     except Exception as e:
-        print(f"[Admin] Cannot notify user {telegram_id}: {e}")
+        logger.warning("Cannot notify user %s: %s", telegram_id, e)
 
 
 # ============================================================

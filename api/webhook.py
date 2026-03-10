@@ -6,7 +6,10 @@ Deploy: https://pyng.vercel.app/api/webhook
 
 import json
 import asyncio
+import logging
 from http.server import BaseHTTPRequestHandler
+
+logger = logging.getLogger(__name__)
 
 from telegram import Update
 
@@ -54,13 +57,11 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"ok": True}).encode())
 
         except Exception as e:
-            print(f"[Webhook Error] {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("Webhook processing error")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps({"ok": False, "error": str(e)}).encode())
+            self.wfile.write(json.dumps({"ok": False, "error": "Internal error"}).encode())
 
     def do_GET(self):
         """Health check endpoint."""

@@ -6,6 +6,10 @@ ConversationHandler với states:
 3. Lưu DB pending → gửi notification cho admin
 """
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import (
     ContextTypes,
@@ -109,7 +113,7 @@ async def enter_email(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
             await update.message.reply_text(
                 "❌ Có lỗi xảy ra. Vui lòng thử lại sau.",
             )
-            print(f"[Registration Error] {e}")
+            logger.error("Registration error for user %s: %s", user.id, e)
         return ConversationHandler.END
 
     # Thông báo cho user

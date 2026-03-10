@@ -7,7 +7,10 @@ Gửi nhắc check-out cho users đã check-in nhưng chưa check-out hôm nay.
 """
 
 import asyncio
+import logging
 from http.server import BaseHTTPRequestHandler
+
+logger = logging.getLogger(__name__)
 
 from services.user_service import get_all_active_users
 from services.checkin_service import has_checked_in_today, get_today_checkin
@@ -104,10 +107,8 @@ class handler(BaseHTTPRequestHandler):
             result = asyncio.run(_send_evening_reminders())
             json_response(self, 200, {"ok": True, "type": "evening", **result})
         except Exception as e:
-            print(f"[Cron Evening Error] {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
-            json_response(self, 500, {"ok": False, "error": str(e)})
+            logger.exception("Cron evening error")
+            json_response(self, 500, {"ok": False, "error": "Internal error"})
 
     def do_GET(self):
         """Health check."""

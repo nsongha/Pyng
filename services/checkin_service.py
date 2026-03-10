@@ -7,19 +7,8 @@ Business logic: check-in, check-out, WFH, duplicate check, working hours.
 from datetime import datetime, timedelta
 
 from db.client import get_client
-from config.settings import TIMEZONE, WFH_LIMIT_PER_MONTH
-
-# Lazy import to avoid circular dependency
-_tz = None
-
-
-def _get_tz():
-    """Lazy load timezone."""
-    global _tz
-    if _tz is None:
-        from zoneinfo import ZoneInfo
-        _tz = ZoneInfo(TIMEZONE)
-    return _tz
+from config.settings import WFH_LIMIT_PER_MONTH
+from config.timezone import get_tz
 
 
 def _today_range() -> tuple[str, str]:
@@ -28,7 +17,7 @@ def _today_range() -> tuple[str, str]:
     Returns:
         tuple: (start_iso, end_iso) dạng UTC ISO string.
     """
-    tz = _get_tz()
+    tz = get_tz()
     now = datetime.now(tz)
     start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     end = start + timedelta(days=1)
@@ -41,7 +30,7 @@ def _current_month_range() -> tuple[str, str]:
     Returns:
         tuple: (start_iso, end_iso).
     """
-    tz = _get_tz()
+    tz = get_tz()
     now = datetime.now(tz)
     start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     # Tháng sau

@@ -8,7 +8,10 @@ Tin nhắn kèm inline buttons theo BOT_FLOWS.md section 2.1.
 """
 
 import asyncio
+import logging
 from http.server import BaseHTTPRequestHandler
+
+logger = logging.getLogger(__name__)
 
 from services.user_service import get_all_active_users
 from services.checkin_service import has_checked_in_today
@@ -100,10 +103,8 @@ class handler(BaseHTTPRequestHandler):
             result = asyncio.run(_send_morning_reminders())
             json_response(self, 200, {"ok": True, "type": "morning", **result})
         except Exception as e:
-            print(f"[Cron Morning Error] {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
-            json_response(self, 500, {"ok": False, "error": str(e)})
+            logger.exception("Cron morning error")
+            json_response(self, 500, {"ok": False, "error": "Internal error"})
 
     def do_GET(self):
         """Health check."""

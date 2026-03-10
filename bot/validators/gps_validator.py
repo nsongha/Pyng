@@ -86,6 +86,8 @@ def validate_location(
     )
 
 
+# TODO: Integrate vào GPS check-in handler để detect spoofing giữa 2 lần check-in
+# Chưa được gọi từ handler nào — kế hoạch dùng khi có lịch sử check-in đủ.
 def check_travel_speed(
     prev_lat: float,
     prev_lng: float,
