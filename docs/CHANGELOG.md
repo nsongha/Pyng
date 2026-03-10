@@ -40,6 +40,7 @@
 
 - Sync 7 workflows từ templates → adapt cho Pyng tech stack
 - Thêm mới: `docs-update.md`, `new-feature.md`
+- Thêm 10 rule files (`.agents/rules/`) — adapt từ templates cho Pyng
 
 ---
 
