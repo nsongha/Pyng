@@ -26,11 +26,36 @@ python -c "from bot.handlers import checkin; print('OK')"
 
 - Chạy checklist `/code-review` — đảm bảo pass hết items
 
-## 3. Cập nhật docs nếu cần
+## 3. Cập nhật docs
 
-- `docs/PROJECT_CONTEXT.md` — nếu thay đổi kiến trúc/scope
-- `CHANGELOG.md` — thêm entry vào `[Unreleased]`
-- `docs/KNOWN_ISSUES.md` — nếu phát hiện bug mới hoặc resolve bug cũ
+### Luôn update sau mỗi task:
+
+| File                  | Khi nào                                                           |
+| --------------------- | ----------------------------------------------------------------- |
+| `docs/CHANGELOG.md`   | **LUÔN** — thêm entry vào `[Unreleased]`                          |
+| `docs/DEV_ROADMAP.md` | **LUÔN** — tick `[x]` tasks đã xong, thêm ✅ nếu hoàn thành phase |
+
+### Update nếu task liên quan:
+
+| File                      | Điều kiện                                                  |
+| ------------------------- | ---------------------------------------------------------- |
+| `docs/PROJECT_CONTEXT.md` | Thay đổi kiến trúc, thêm service/tool mới, đổi deploy URL  |
+| `docs/ARCHITECTURE.md`    | Thêm/sửa component, thay đổi data flow, thêm diagram       |
+| `docs/BOT_FLOWS.md`       | Thêm/sửa command, thay đổi conversation flow               |
+| `docs/TECH_STACK.md`      | Thêm dependency, đổi version, thêm service bên ngoài       |
+| `docs/DEPLOYMENT.md`      | Thay đổi deploy process, env vars mới, infra mới           |
+| `docs/KNOWN_ISSUES.md`    | Phát hiện bug mới, resolve bug cũ, thêm workaround         |
+| `docs/DECISIONS.md`       | Quyết định kiến trúc/công nghệ quan trọng (WHY + tradeoff) |
+
+### Hiếm khi thay đổi (chỉ update khi có yêu cầu rõ ràng):
+
+| File                          | Điều kiện                                      |
+| ----------------------------- | ---------------------------------------------- |
+| `docs/PRD.md`                 | Thay đổi scope sản phẩm lớn                    |
+| `docs/USAGE.md`               | Thêm tính năng mà user cần biết cách dùng      |
+| `docs/GAMIFICATION_DESIGN.md` | Thay đổi hệ thống gamification                 |
+| `docs/PRIVACY_POLICY.md`      | Thu thập data mới hoặc thay đổi chính sách     |
+| `docs/README.md`              | Cập nhật folder structure, badges, quick start |
 
 ## 4. Git add và commit
 
