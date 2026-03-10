@@ -1,39 +1,63 @@
-# Feature Development Workflow
+---
+description: Khởi động và quản lý dev server an toàn, tránh zombie processes
+---
 
-> Workflow phát triển feature mới.
+# /dev — Dev Server Workflow
 
-## 1. Đọc context
+## Vấn đề cần tránh
 
-- Đọc `docs/PROJECT_CONTEXT.md` trước tiên
-- Đọc thêm `docs/APP_DESCRIPTION.md` nếu cần hiểu roadmap
+Mỗi lần gõ `pnpm dev` mà KHÔNG tắt session cũ sẽ tạo thêm Node processes chạy ngầm
+(zombie processes), gây ra lỗi `EADDRINUSE`, API trả về data cũ, CPU/RAM bị ngốn.
 
-## 2. Phân tích yêu cầu
+## Quy trình chuẩn
 
-- Feature này thay đổi backend (API), frontend (UI), hay cả hai?
-- Có ảnh hưởng tới data format không? (breaking change)
-- Cần thêm dependency mới không?
+### 1. Trước khi bắt đầu làm việc buổi sáng (hoặc sau khi restart máy)
 
-## 3. Plan
+Kiểm tra xem dev server có đang chạy chưa:
 
-- Xác định files cần sửa
-- Nếu phức tạp (> 3 files): viết implementation plan trước
-- Nếu đơn giản: implement trực tiếp
+```bash
+pnpm lsof -ti:3001
+```
 
-## 4. Implement
+Nếu không có output → chưa có server nào, chạy bình thường:
 
-- **Backend changes**: sửa server, thêm route/parser mới
-- **Frontend changes**: sửa UI, thêm section/component mới
-- **CLI changes**: sync logic vào CLI nếu cần
-- Giữ consistent với code style hiện tại
+// turbo
 
-## 5. Test
+```bash
+pnpm dev
+```
 
-- Chạy server/app
-- Verify trên browser/client
-- Test các edge cases
+### 2. Khi cần restart (sau khi thay đổi code quan trọng, xử lý lỗi)
 
-## 6. Hoàn tất
+Dùng lệnh này thay vì tắt terminal và mở lại:
 
-- Chạy code review checklist
-- Update CHANGELOG, docs nếu cần
-- Commit theo Conventional Commits
+// turbo
+
+```bash
+pnpm restart
+```
+
+> **Giải thích**: `pnpm restart` = `pnpm kill` (dọn sạch) + 1 giây chờ + `pnpm dev` (khởi động lại)
+
+### 3. Chỉ dọn sạch (không restart)
+
+// turbo
+
+```bash
+pnpm kill
+```
+
+## Nguyên tắc sử dụng terminal trong IDE
+
+- **KHÔNG** mở nhiều terminal rồi gõ `pnpm dev` ở mỗi cái — Turborepo tự chạy tất cả apps.
+- **CHỈ cần 1 terminal** chạy `pnpm dev` ở thư mục root.
+- Khi đóng cửa sổ IDE → terminal tự tắt → Node processes cũng tự chết (bình thường).
+- Nếu IDE crash → chạy `pnpm kill` trước khi `pnpm dev`.
+
+## Dấu hiệu nhận biết có zombie process
+
+- `pnpm dev` báo lỗi `EADDRINUSE: address already in use :::3001`
+- API/Frontend trả về kết quả không đúng dù đã sửa code
+- Máy chạy nóng/chậm bất thường
+
+→ Chạy `pnpm restart` để xử lý.

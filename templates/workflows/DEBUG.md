@@ -1,35 +1,67 @@
+---
+description: Quy trình debug có hệ thống dựa trên systematic-debugging skill
+---
+
 # Debug Workflow
 
-> Quy trình debug systematic khi gặp lỗi.
+> Tham khảo chi tiết skill `@systematic-debugging` trước khi bắt đầu.
 
-## 1. Thu thập thông tin
+## 1. Reproduce
 
-- Đọc error message đầy đủ
-- Xác định file + line number gây lỗi
-- Kiểm tra git log xem commit nào gây ra (nếu regression):
+- Xác nhận bug: reproduce được bằng steps cụ thể
+- Ghi lại: URL, input, expected vs actual behavior
+- Screenshot / error log nếu có
 
-```bash
-git log --oneline -10
-```
+## 2. Root Cause Investigation
 
-## 2. Reproduce
+// turbo
 
-- Chạy lại server/app và trigger lỗi
-- Ghi lại exact steps để reproduce
+- Đọc error logs, stack traces
+- Kiểm tra recent changes: `git log -5 --oneline`
+- Trace execution path từ input → output
+- Xác định scope: frontend? backend? database? infra?
 
-## 3. Isolate
+### Frontend debug
 
-- Thu hẹp phạm vi: module nào gây lỗi?
-- Thêm `console.log` tạm tại các điểm nghi ngờ
-- Kiểm tra data flow: input → processing → output
+// turbo
+
+- Browser DevTools → Console errors
+- Network tab → API responses
+- React DevTools → component tree, state
+- Zustand DevTools → store state changes
+
+### Backend debug
+
+// turbo
+
+- NestJS logs → controller/service errors
+- Prisma query logs → database issues
+- Check Guards/Interceptors pipeline
+- Verify JWT payload và tenantId
+
+## 3. Hypothesis
+
+- Đặt giả thuyết: "Lỗi vì [X] xảy ra khi [Y]"
+- Viết test reproduce lỗi (nếu áp dụng TDD)
+- Verify giả thuyết bằng evidence
 
 ## 4. Fix
 
-- Sửa đúng root cause, không patch symptoms
-- Chỉ sửa trong phạm vi bug — không refactor kèm
+- Fix ĐÚNG root cause, KHÔNG fix symptom
+- Phạm vi fix tối thiểu — KHÔNG refactor thêm
+- Thêm test case cover trường hợp gây lỗi
 
 ## 5. Verify
 
-- Confirm bug đã fix
-- Kiểm tra không gây regression ở chỗ khác
-- Chạy test suite (nếu có)
+// turbo
+
+- Bug không còn reproduce
+  // turbo
+- `pnpm build` pass
+- Existing tests pass
+- Kiểm tra side effects trên modules liên quan
+
+## 6. Commit
+
+- Chạy workflow `/task-completion`
+- Commit message: `fix: <mô tả lỗi đã sửa tiếng Việt>`
