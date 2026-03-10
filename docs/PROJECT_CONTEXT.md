@@ -13,9 +13,10 @@ Chi phí vận hành: **$0/tháng**.
 
 |                  |                             |
 | ---------------- | --------------------------- |
-| **Bot username** | `@PyngBot`                  |
+| **Bot username** | `@pyng85111_bot`            |
 | **Màu chủ đạo**  | `#FC3C44` (Apple Music Red) |
 | **Tagline**      | _"Ping your presence"_      |
+| **Deploy**       | https://pyng.vercel.app     |
 
 ## 2. Thông tin BSMlabs
 

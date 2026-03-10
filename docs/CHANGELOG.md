@@ -20,6 +20,22 @@
 - USAGE.md thêm cross-reference BOT_FLOWS.md
 - Tạo CHANGELOG.md
 
+### chore
+
+- Tạo project scaffold: requirements.txt, .env.example, vercel.json, config/settings.py
+- Tạo db/schema.sql (10 tables + indexes + RLS)
+- Setup Supabase CLI + push migrations + seed data (BSMlabs config)
+- Tạo GitHub repo nsongha/Pyng
+
+### feat
+
+- **Phase 0**: Bot webhook + /start command
+  - `api/webhook.py` — Vercel serverless endpoint
+  - `bot/app.py` — Application factory
+  - `bot/handlers/start.py` — /start welcome message
+  - Deploy: https://pyng.vercel.app
+  - Bot: @pyng85111_bot
+
 ---
 
 _Pyng — "Ping your presence" — BSMlabs Check-in Bot_
