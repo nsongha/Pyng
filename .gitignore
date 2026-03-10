@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (Mini App)
+node_modules/
+miniapp/node_modules/
+miniapp/dist/
+
+# Vercel
+.vercel/
+
+# Temporary
+.tmp-skills/
+*.log
+
+# Antigravity / Gemini
+.gemini/
