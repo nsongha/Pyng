@@ -9,7 +9,36 @@
 
 ### feat
 
+- **Phase 5 — Backend Enhancement** (Stream A):
+  - `services/overtime_service.py` — Overtime tracking: 30 phút grace sau WORK_END, cap 4h/ngày
+  - `services/report_service.py` — Custom date range Excel export (max 90 ngày)
+  - `bot/handlers/report.py` — `/report YYYY-MM-DD YYYY-MM-DD` custom range command
+  - `bot/handlers/admin.py` — Bulk approve manual check-ins (inline button `bulk_approve_all`)
+  - `bot/app.py` — Register `get_bulk_approve_handlers()`
+
+- **Phase 5 — Mini App Charts** (Stream B):
+  - `api/checkins/chart.py` — GET `/api/checkins/chart` (daily hours, summary, trend)
+  - `api/overtime.py` — GET `/api/overtime` (monthly OT data)
+  - `miniapp/src/pages/Charts.tsx` — Month selector + stats + trend display
+  - `miniapp/src/components/charts/WorkingHoursChart.tsx` — Recharts bar chart
+  - `miniapp/src/components/charts/AttendanceDonut.tsx` — Donut chart
+  - `miniapp/src/components/OvertimeCard.tsx` — OT summary + sparkline
+
+- **Phase 5 — Mini App Leave Form** (Stream C):
+  - `api/leave/request.py` — POST `/api/leave/request` + admin notification
+  - `api/leave/my.py` — GET `/api/leave/my` (leave list + balance)
+  - `miniapp/src/pages/Leave.tsx` — Tab toggle (list/form) + balance card
+  - `miniapp/src/components/LeaveForm.tsx` — Date picker + validation + haptic
+  - `miniapp/src/components/LeaveList.tsx` — Status badges + pull-to-refresh
+  - `miniapp/src/App.tsx` — React Router + BottomNav (3 tabs)
+
+- **Phase 5 — Testing & Polish** (Stream D):
+  - Fix TD-001: N+1 query leaderboard API → batch user names
+  - Fix TD-002: CORS `*` → `MINI_APP_URL` restriction
+  - QC: compile 10/10 Python + miniapp build OK
+
 - **Phase 4 — Gamification Services** (Stream A, Wave 1):
+
   - `services/gamification_service.py` — Hệ thống điểm, streak, leaderboard, milestones (8 functions)
   - `services/mood_service.py` — Mood tracking, burnout detection, mood stats (4 functions)
   - `services/checkin_service.py` — Thêm `mood` param + `process_gamification_after_checkin()` orchestrator

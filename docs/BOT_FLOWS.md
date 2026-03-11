@@ -316,13 +316,14 @@ Bot → Manager: 📋 Đơn xin nghỉ phép:
 
 ### Admin
 
-| Lệnh                         | Chức năng               |
-| ---------------------------- | ----------------------- |
-| `/admin`                     | Mở admin panel          |
-| `/report [today/week/month]` | Báo cáo nhanh           |
-| `/adduser`                   | Thêm nhân viên          |
-| `/config`                    | Cài đặt hệ thống        |
-| `/approve [id]`              | Duyệt check-in thủ công |
+| Lệnh                         | Chức năng                    |
+| ---------------------------- | ---------------------------- |
+| `/admin`                     | Mở admin panel               |
+| `/report [today/week/month]` | Báo cáo nhanh                |
+| `/report YYYY-MM-DD YYYY-MM-DD` | Export Excel khoảng ngày tùy chọn |
+| `/adduser`                   | Thêm nhân viên               |
+| `/config`                    | Cài đặt hệ thống             |
+| `/approve [id]`              | Duyệt check-in thủ công      |
 
 ---
 

@@ -269,8 +269,10 @@ GPS fail → thử WiFi → thử QR → thử NFC → Manual (selfie)
 ```
 GET  /api/me                    # Thông tin cá nhân + stats
 GET  /api/checkins?month=2026-03 # Lịch sử check-in
+GET  /api/checkins/chart?month=2026-03 # Chart data (daily hours, summary, trend)
 GET  /api/team/today            # Trạng thái team hôm nay
 GET  /api/leaderboard           # Bảng xếp hạng điểm
+GET  /api/overtime?month=2026-03 # Overtime data tháng
 POST /api/leave/request         # Xin nghỉ
 GET  /api/leave/my              # Danh sách nghỉ của tôi
 
