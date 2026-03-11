@@ -29,9 +29,16 @@ ENTERING_NAME, ENTERING_EMAIL = range(2)
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Xử lý lệnh /start.
 
-    Nếu user đã đăng ký → welcome back.
-    Nếu chưa → bắt đầu registration flow.
+    Deep link routing:
+    - /start qr_TOKEN → QR check-in
+    - /start nfc_TOKEN → NFC check-in (placeholder, Stream B)
+    - /start (no args) → Registration flow
     """
+    # Deep link routing
+    if context.args:
+        await _handle_deep_link(update, context, context.args[0])
+        return ConversationHandler.END
+
     user = update.effective_user
     existing = get_by_telegram_id(user.id)
 
@@ -60,6 +67,35 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         parse_mode="Markdown",
     )
     return ENTERING_NAME
+
+
+async def _handle_deep_link(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    payload: str,
+) -> None:
+    """Route deep link payload tới handler tương ứng.
+
+    Args:
+        update: Telegram update.
+        context: Bot context.
+        payload: Deep link payload (phần sau /start).
+    """
+    if payload.startswith("qr_"):
+        token = payload[3:]  # Bỏ prefix "qr_"
+        from bot.handlers.qr_checkin import handle_qr_deeplink
+        await handle_qr_deeplink(update, context, token)
+
+    elif payload.startswith("nfc_"):
+        token = payload[4:]  # Bỏ prefix "nfc_"
+        from bot.handlers.nfc_checkin import handle_nfc_deeplink
+        await handle_nfc_deeplink(update, context, token)
+
+    else:
+        await update.message.reply_text(
+            "❌ Link không hợp lệ.\n"
+            "Gõ /start để đăng ký hoặc /checkin để check-in.",
+        )
 
 
 async def enter_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

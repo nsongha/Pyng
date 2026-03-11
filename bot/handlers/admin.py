@@ -3,6 +3,9 @@
 B2: Approval flow — inline buttons (Duyệt / Từ chối).
 B7: Admin GPS settings — set geofence radius.
 B8: Admin WiFi whitelist management — thêm/xóa SSID.
+A8: Admin QR config — xem QR link, tạo QR mới.
+B4: Admin NFC management — tạo token, xem danh sách, vô hiệu hóa.
+C2: Manual check-in approval — duyệt/từ chối yêu cầu check-in thủ công.
 """
 
 import logging
@@ -27,10 +30,23 @@ from services.office_service import (
     add_wifi_ssid,
     remove_wifi_ssid,
 )
+from services.checkin_service import create_checkin
+from services.qr_service import get_current_qr, create_qr_session, _build_deep_link
+from services.nfc_service import (
+    create_nfc_token,
+    list_nfc_tokens,
+    deactivate_nfc_token,
+    build_nfc_deep_link,
+)
+from bot.handlers._helpers import get_ontime_status, format_current_time
+from config.settings import QR_EXPIRE_SECONDS, QR_DISPLAY_URL
 
 # Conversation states cho admin flows
 ADMIN_GPS_RADIUS = 100
 ADMIN_WIFI_ACTION, ADMIN_WIFI_SSID = 101, 102
+ADMIN_QR_ACTION = 103
+ADMIN_NFC_ACTION, ADMIN_NFC_LOCATION = 106, 107
+ADMIN_MANUAL_REJECT_REASON = 104
 
 
 # ============================================================
@@ -326,3 +342,388 @@ def get_admin_wifi_handler() -> ConversationHandler:
         },
         fallbacks=[CommandHandler("cancel", admin_cancel)],
     )
+
+
+# ============================================================
+# A8: Admin QR config
+# ============================================================
+
+
+async def admin_qr_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Hiển thị QR config và options."""
+    if not is_admin(update.effective_user.id):
+        await update.message.reply_text("⛔ Bạn không có quyền admin.")
+        return ConversationHandler.END
+
+    office = get_active_office()
+    if not office:
+        await update.message.reply_text(
+            "❌ Chưa có văn phòng nào được cấu hình.\n"
+            "Vui lòng tạo office trong Supabase Dashboard trước."
+        )
+        return ConversationHandler.END
+
+    # Lấy QR hiện tại
+    qr_session = get_current_qr(office["id"])
+    deep_link = _build_deep_link(qr_session["token"])
+
+    display_url = QR_DISPLAY_URL or "(chưa cấu hình QR_DISPLAY_URL)"
+
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("🔄 Tạo QR mới", callback_data="qr_refresh"),
+        ],
+        [InlineKeyboardButton("❌ Đóng", callback_data="qr_close")],
+    ])
+
+    await update.message.reply_text(
+        f"📱 **QR Config**\n\n"
+        f"🖥️ QR Display: {display_url}\n"
+        f"⏱️ Expire: {QR_EXPIRE_SECONDS}s ({QR_EXPIRE_SECONDS // 60} phút)\n\n"
+        f"**QR hiện tại:**\n"
+        f"🔑 Token: `{qr_session['token']}`\n"
+        f"⏳ Hết hạn: {qr_session['expire_at']}\n"
+        f"🔗 Deep link: {deep_link}\n\n"
+        f"Chọn hành động:",
+        parse_mode="Markdown",
+        reply_markup=keyboard,
+    )
+    return ADMIN_QR_ACTION
+
+
+async def admin_qr_action(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Xử lý action từ QR inline buttons."""
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == "qr_close":
+        await query.edit_message_text("👋 Đã đóng QR config.")
+        return ConversationHandler.END
+
+    if query.data == "qr_refresh":
+        office = get_active_office()
+        if not office:
+            await query.edit_message_text("❌ Không có office active.")
+            return ConversationHandler.END
+
+        qr_session = create_qr_session(office["id"])
+        deep_link = _build_deep_link(qr_session["token"])
+
+        await query.edit_message_text(
+            f"✅ **QR mới đã tạo!**\n\n"
+            f"🔑 Token: `{qr_session['token']}`\n"
+            f"⏳ Hết hạn: {qr_session['expire_at']}\n"
+            f"🔗 Deep link: {deep_link}",
+            parse_mode="Markdown",
+        )
+        return ConversationHandler.END
+
+    return ConversationHandler.END
+
+
+def get_admin_qr_handler() -> ConversationHandler:
+    """Tạo ConversationHandler cho QR config.
+
+    Returns:
+        ConversationHandler: /admin_qr handler.
+    """
+    return ConversationHandler(
+        entry_points=[CommandHandler("admin_qr", admin_qr_command)],
+        states={
+            ADMIN_QR_ACTION: [
+                CallbackQueryHandler(admin_qr_action, pattern=r"^qr_"),
+            ],
+        },
+        fallbacks=[CommandHandler("cancel", admin_cancel)],
+    )
+
+
+# ============================================================
+# C2: Admin Manual Check-in Approval
+# ============================================================
+
+
+async def handle_manual_approval(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Xử lý khi admin bấm nút Duyệt check-in thủ công."""
+    query = update.callback_query
+
+    if not is_admin(query.from_user.id):
+        await query.answer("⛔ Bạn không có quyền admin.", show_alert=True)
+        return
+
+    await query.answer()
+
+    # Parse telegram_id từ callback_data: "manual_approve_123456789"
+    telegram_id = int(query.data.split("_")[2])
+    pending_key = f"manual_pending_{telegram_id}"
+    pending = context.bot_data.get(pending_key)
+
+    if not pending:
+        await query.edit_message_caption(
+            caption=(query.message.caption or "") + "\n\n⚠️ Yêu cầu đã hết hạn hoặc đã xử lý.",
+        )
+        return
+
+    user = pending["user"]
+    reason = pending["reason"]
+
+    # Tạo checkin record
+    office = get_active_office()
+    office_id = office["id"] if office else None
+
+    checkin = create_checkin(
+        user_id=user["id"],
+        checkin_type="in",
+        method="manual",
+        office_id=office_id,
+        note=reason,
+    )
+
+    # Update checkin record — set manual approval fields
+    from db import client as db
+    db.update(
+        "checkins",
+        {
+            "is_manual_approved": True,
+            "approved_by": query.from_user.id,
+        },
+        filters={"id": checkin["id"]},
+    )
+
+    # Cập nhật message admin
+    await query.edit_message_caption(
+        caption=(
+            (query.message.caption or "")
+            + f"\n\n✅ **Đã duyệt** bởi @{query.from_user.username}"
+        ),
+        parse_mode="Markdown",
+    )
+
+    # Thông báo cho user
+    time_str = pending.get("time_str", "")
+    date_str = pending.get("date_str", "")
+    ontime = get_ontime_status()
+
+    try:
+        await context.bot.send_message(
+            chat_id=telegram_id,
+            text=(
+                f"✅ **Check-in thủ công đã được duyệt!**\n\n"
+                f"👤 {user['full_name']}\n"
+                f"🕐 {time_str} — {date_str}\n"
+                f"{ontime}\n"
+                f"📍 Phương thức: Manual (Admin duyệt)\n\n"
+                f"Chúc bạn ngày làm việc hiệu quả! 💪"
+            ),
+            parse_mode="Markdown",
+        )
+    except Exception as e:
+        logger.warning("Cannot notify user %s after manual approval: %s", telegram_id, e)
+
+    # Cleanup pending data
+    context.bot_data.pop(pending_key, None)
+
+
+async def handle_manual_rejection(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Xử lý khi admin bấm nút Từ chối check-in thủ công."""
+    query = update.callback_query
+
+    if not is_admin(query.from_user.id):
+        await query.answer("⛔ Bạn không có quyền admin.", show_alert=True)
+        return
+
+    await query.answer()
+
+    # Parse telegram_id
+    telegram_id = int(query.data.split("_")[2])
+    pending_key = f"manual_pending_{telegram_id}"
+    pending = context.bot_data.get(pending_key)
+
+    if not pending:
+        await query.edit_message_caption(
+            caption=(query.message.caption or "") + "\n\n⚠️ Yêu cầu đã hết hạn hoặc đã xử lý.",
+        )
+        return
+
+    # Cập nhật message admin
+    await query.edit_message_caption(
+        caption=(
+            (query.message.caption or "")
+            + f"\n\n❌ **Đã từ chối** bởi @{query.from_user.username}"
+        ),
+        parse_mode="Markdown",
+    )
+
+    # Thông báo cho user
+    try:
+        await context.bot.send_message(
+            chat_id=telegram_id,
+            text=(
+                "❌ **Yêu cầu check-in thủ công bị từ chối.**\n\n"
+                "Liên hệ admin nếu cần hỗ trợ.\n"
+                "Hoặc thử check-in bằng phương thức khác: /checkin, /checkin_wifi, /checkin_qr"
+            ),
+            parse_mode="Markdown",
+        )
+    except Exception as e:
+        logger.warning("Cannot notify user %s after manual rejection: %s", telegram_id, e)
+
+    # Cleanup pending data
+    context.bot_data.pop(pending_key, None)
+
+
+def get_manual_approval_handlers() -> list:
+    """Trả về list handlers cho manual check-in approval flow.
+
+    Returns:
+        list: [CallbackQueryHandler approve, CallbackQueryHandler reject]
+    """
+    return [
+        CallbackQueryHandler(handle_manual_approval, pattern=r"^manual_approve_\d+$"),
+        CallbackQueryHandler(handle_manual_rejection, pattern=r"^manual_reject_\d+$"),
+    ]
+
+
+# ============================================================
+# B4: Admin NFC management
+# ============================================================
+
+
+async def admin_nfc_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Hiển thị danh sách NFC tokens, chọn action."""
+    if not is_admin(update.effective_user.id):
+        await update.message.reply_text("⛔ Bạn không có quyền admin.")
+        return ConversationHandler.END
+
+    office = get_active_office()
+    if not office:
+        await update.message.reply_text(
+            "❌ Chưa có văn phòng nào được cấu hình.\n"
+            "Vui lòng tạo office trong Supabase Dashboard trước."
+        )
+        return ConversationHandler.END
+
+    context.user_data["admin_office_id"] = office["id"]
+
+    # Lấy danh sách NFC tokens
+    tokens = list_nfc_tokens(office["id"])
+    if tokens:
+        token_list = "\n".join(
+            f"  {i+1}. `{t['token']}` — {t.get('location', '(chưa đặt tên)')}"
+            f" {'✅' if t.get('is_active') else '❌'} (ID: {t['id']})"
+            for i, t in enumerate(tokens)
+        )
+    else:
+        token_list = "  (chưa có NFC token nào)"
+
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("➕ Tạo NFC token", callback_data="nfc_create"),
+            InlineKeyboardButton("🗑️ Vô hiệu hóa", callback_data="nfc_deactivate"),
+        ],
+        [InlineKeyboardButton("❌ Đóng", callback_data="nfc_close")],
+    ])
+
+    await update.message.reply_text(
+        f"🏷️ **NFC Tokens — {office['name']}**\n\n"
+        f"{token_list}\n\n"
+        f"Chọn hành động:",
+        parse_mode="Markdown",
+        reply_markup=keyboard,
+    )
+    return ADMIN_NFC_ACTION
+
+
+async def admin_nfc_action(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Xử lý action từ NFC inline buttons."""
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == "nfc_close":
+        await query.edit_message_text("👋 Đã đóng quản lý NFC.")
+        return ConversationHandler.END
+
+    if query.data == "nfc_create":
+        context.user_data["nfc_action"] = "create"
+        await query.edit_message_text(
+            "🏷️ Nhập **mô tả vị trí** đặt NFC tag:\n"
+            "Ví dụ: \"Cửa chính tầng 1\", \"Phòng họp A\"\n\n"
+            "Hoặc /cancel để hủy.",
+            parse_mode="Markdown",
+        )
+        return ADMIN_NFC_LOCATION
+
+    if query.data == "nfc_deactivate":
+        context.user_data["nfc_action"] = "deactivate"
+        await query.edit_message_text(
+            "🏷️ Nhập **ID** của NFC token muốn vô hiệu hóa:\n"
+            "Hoặc /cancel để hủy.",
+            parse_mode="Markdown",
+        )
+        return ADMIN_NFC_LOCATION
+
+    return ConversationHandler.END
+
+
+async def admin_nfc_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Nhận input cho NFC action (location hoặc token ID)."""
+    action = context.user_data.get("nfc_action")
+    text = update.message.text.strip()
+    office_id = context.user_data.get("admin_office_id")
+
+    if action == "create":
+        if not office_id:
+            await update.message.reply_text("❌ Không xác định được office.")
+            return ConversationHandler.END
+
+        nfc = create_nfc_token(office_id=office_id, location=text)
+        deep_link = build_nfc_deep_link(nfc["token"])
+
+        await update.message.reply_text(
+            f"✅ **NFC Token đã tạo!**\n\n"
+            f"🔑 Token: `{nfc['token']}`\n"
+            f"📌 Vị trí: {text}\n"
+            f"🔗 Deep link:\n`{deep_link}`\n\n"
+            f"Ghi URL trên vào NFC tag (dạng NDEF URI record).",
+            parse_mode="Markdown",
+        )
+
+    elif action == "deactivate":
+        try:
+            token_id = int(text)
+        except ValueError:
+            await update.message.reply_text("❌ Vui lòng nhập ID số nguyên:")
+            return ADMIN_NFC_LOCATION
+
+        result = deactivate_nfc_token(token_id)
+        if result:
+            await update.message.reply_text(f"✅ Đã vô hiệu hóa NFC token ID: {token_id}")
+        else:
+            await update.message.reply_text(f"❌ Không tìm thấy NFC token ID: {token_id}")
+
+    return ConversationHandler.END
+
+
+def get_admin_nfc_handler() -> ConversationHandler:
+    """Tạo ConversationHandler cho NFC management.
+
+    Returns:
+        ConversationHandler: /admin_nfc handler.
+    """
+    return ConversationHandler(
+        entry_points=[CommandHandler("admin_nfc", admin_nfc_command)],
+        states={
+            ADMIN_NFC_ACTION: [
+                CallbackQueryHandler(admin_nfc_action, pattern=r"^nfc_"),
+            ],
+            ADMIN_NFC_LOCATION: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, admin_nfc_input),
+            ],
+        },
+        fallbacks=[CommandHandler("cancel", admin_cancel)],
+    )
+

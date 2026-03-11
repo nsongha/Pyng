@@ -35,15 +35,38 @@
         padding: 24px;
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(252, 60, 68, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
       #qr-container img {
         width: 280px;
         height: 280px;
       }
+      .deep-link {
+        display: block;
+        margin-top: 12px;
+        font-size: 0.75rem;
+        color: #999;
+        word-break: break-all;
+        text-align: center;
+        max-width: 280px;
+      }
+      .deep-link a {
+        color: #fc3c44;
+        text-decoration: none;
+      }
+      .deep-link a:hover {
+        text-decoration: underline;
+      }
       .timer {
         margin-top: 1.5rem;
         color: #888;
         font-size: 0.9rem;
+      }
+      .timer strong {
+        color: #fc3c44;
+        font-size: 1.2rem;
       }
       .status {
         margin-top: 0.5rem;
@@ -55,22 +78,106 @@
       .status.error {
         color: #fc3c44;
       }
+      .status.loading {
+        color: #ff9800;
+      }
+      .code-display {
+        margin-top: 8px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+        letter-spacing: 4px;
+        font-family: monospace;
+      }
     </style>
   </head>
   <body>
     <h1>📍 Pyng</h1>
     <p class="subtitle">Quét mã để check-in</p>
     <div id="qr-container">
-      <p style="padding: 100px 60px; color: #999; text-align: center">
+      <p id="placeholder" style="padding: 100px 60px; color: #999; text-align: center">
         Đang tải QR code...
       </p>
     </div>
-    <p class="timer">Tự động refresh mỗi <strong>5 phút</strong></p>
+    <p class="timer">Hết hạn trong <strong id="countdown">--:--</strong></p>
     <p class="status ok" id="status">● Đang kết nối...</p>
 
     <script>
-      // TODO: Fetch QR từ /api/qr/current và auto-refresh mỗi 5 phút
-      // Placeholder — sẽ implement ở Phase 2
+      const QR_API_URL = "/api/qr/current";
+      const POLL_INTERVAL_MS = 30000; // 30 giây
+
+      let currentToken = null;
+      let expireAt = null;
+      let countdownInterval = null;
+
+      async function fetchQR() {
+        const statusEl = document.getElementById("status");
+        try {
+          statusEl.className = "status loading";
+          statusEl.textContent = "● Đang cập nhật...";
+
+          const resp = await fetch(QR_API_URL);
+          const data = await resp.json();
+
+          if (!data.ok) {
+            throw new Error(data.error || "API error");
+          }
+
+          currentToken = data.token;
+          expireAt = new Date(data.expire_at);
+
+          // Render QR image
+          const container = document.getElementById("qr-container");
+          container.innerHTML = `
+            <img src="data:image/png;base64,${data.qr_image_base64}" alt="QR Code" />
+            <div class="code-display">${data.token}</div>
+            <span class="deep-link">
+              Không scan được? <a href="${data.deep_link_url}" target="_blank">Bấm vào đây</a>
+            </span>
+          `;
+
+          statusEl.className = "status ok";
+          statusEl.textContent = "● Đang hoạt động";
+
+          // Start countdown
+          startCountdown();
+
+        } catch (err) {
+          console.error("Fetch QR error:", err);
+          statusEl.className = "status error";
+          statusEl.textContent = "● Lỗi kết nối — thử lại sau 30s";
+        }
+      }
+
+      function startCountdown() {
+        if (countdownInterval) clearInterval(countdownInterval);
+
+        countdownInterval = setInterval(() => {
+          if (!expireAt) return;
+
+          const now = new Date();
+          const diff = expireAt - now;
+
+          if (diff <= 0) {
+            document.getElementById("countdown").textContent = "00:00";
+            clearInterval(countdownInterval);
+            // QR đã hết hạn → fetch mới
+            fetchQR();
+            return;
+          }
+
+          const minutes = Math.floor(diff / 60000);
+          const seconds = Math.floor((diff % 60000) / 1000);
+          document.getElementById("countdown").textContent =
+            `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+        }, 1000);
+      }
+
+      // Initial load
+      fetchQR();
+
+      // Poll mỗi 30 giây
+      setInterval(fetchQR, POLL_INTERVAL_MS);
     </script>
   </body>
 </html>

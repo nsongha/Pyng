@@ -13,6 +13,9 @@ from bot.handlers.admin import (
     get_approval_handlers,
     get_admin_gps_handler,
     get_admin_wifi_handler,
+    get_admin_qr_handler,
+    get_admin_nfc_handler,
+    get_manual_approval_handlers,
 )
 
 
@@ -44,5 +47,15 @@ def create_bot() -> Application:
 
     # Admin WiFi management (ConversationHandler)
     app.add_handler(get_admin_wifi_handler())
+
+    # Admin QR config (ConversationHandler)
+    app.add_handler(get_admin_qr_handler())
+
+    # Admin NFC management (ConversationHandler)
+    app.add_handler(get_admin_nfc_handler())
+
+    # Manual check-in approval inline buttons
+    for handler in get_manual_approval_handlers():
+        app.add_handler(handler)
 
     return app

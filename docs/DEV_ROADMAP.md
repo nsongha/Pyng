@@ -59,34 +59,37 @@ Week 1          Week 2          Week 3          Week 4
 
 ---
 
-## Phase 2 — Check-in Methods (Tuần 2)
+## Phase 2 — Check-in Methods (Tuần 2) ✅ (Hoàn thành 2026-03-11)
 
 **Mục tiêu**: Thêm QR + NFC + Fallback thủ công
 
 ### Ngày 8–10: QR System
 
-- [ ] QR code generator (qrcode + Pillow)
-- [ ] QR token store trong Supabase (expire 5 phút)
-- [ ] QR display web page (auto-refresh)
-- [ ] Deep link handler: `/start qr_TOKEN`
-- [ ] Validate QR: tồn tại, chưa used, chưa expired
-- [ ] Admin: config expire time, xem QR display link
+- [x] QR code generator (qrcode + Pillow)
+- [x] QR token store trong Supabase (expire 5 phút)
+- [x] QR display web page (auto-refresh + countdown)
+- [x] Deep link handler: `/start qr_TOKEN`
+- [x] Validate QR: tồn tại, chưa used, chưa expired
+- [x] Admin: config expire time, xem QR display link (/admin_qr)
+- [x] Manual QR input: `/checkin_qr` (gõ mã 8 ký tự)
+- [x] API endpoint: `/api/qr/current` (JSON + base64 image)
+- [x] Cron endpoint: `/api/cron/qr_refresh` (mỗi 5 phút)
 
 ### Ngày 11–12: NFC System
 
-- [ ] NFC token generator và lưu DB
-- [ ] Deep link handler: `/start nfc_TOKEN`
-- [ ] Admin: tạo NFC token, quản lý danh sách
-- [ ] Hướng dẫn ghi NFC tag (gửi PDF trong bot)
+- [x] NFC token generator và lưu DB
+- [x] Deep link handler: `/start nfc_TOKEN`
+- [x] Admin: tạo NFC token, quản lý danh sách (/admin_nfc)
+- [x] Hiển thị deep link URL cho mỗi token (để ghi vào NFC tag)
 
 ### Ngày 13–14: Manual Fallback
 
-- [ ] Flow "Gặp sự cố"
-- [ ] Nhận ảnh selfie, lưu với metadata
-- [ ] Admin notification + duyệt/từ chối
-- [ ] Bulk approve
+- [x] Flow "Gặp sự cố" (/manual, /checkin_manual)
+- [x] Nhận ảnh selfie, lưu với metadata (photo + lý do)
+- [x] Admin notification + duyệt/từ chối (inline buttons trên admin group)
+- [ ] Bulk approve (dời sang Phase 3)
 
-**Done when**: Cả 4 phương thức hoạt động, fallback hoạt động
+**Done when**: ~~Cả 4 phương thức hoạt động, fallback hoạt động~~ ✅ Done
 
 ---
 

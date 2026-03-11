@@ -2,7 +2,7 @@
 
 > ⚡ File này dùng để AI (hoặc dev mới) đọc nhanh toàn bộ dự án trong 2 phút.  
 > Để hiểu sâu hơn từng phần, đọc file tương ứng được link bên dưới.  
-> Cập nhật lần cuối: 2026-03-10
+> Cập nhật lần cuối: 2026-03-11
 
 ---
 
@@ -119,11 +119,14 @@ GitHub Actions (Cron)
 
 - `bot/app.py` — Application factory, đăng ký handlers
 - `bot/handlers/_helpers.py` — Shared utils (get_active_user, ontime status, time format)
-- `bot/handlers/start.py` — Registration flow (ConversationHandler: tên → email → chờ duyệt)
-- `bot/handlers/admin.py` — Admin approval, GPS settings, WiFi management
-- `bot/handlers/checkin.py` — Re-export module (backward compatible)
+- `bot/handlers/start.py` — Registration flow + deep link routing (QR/NFC)
+- `bot/handlers/admin.py` — Admin approval, GPS, WiFi, QR config, NFC management, manual approval
+- `bot/handlers/checkin.py` — Re-export module (GPS, WiFi, QR, Manual, Checkout, WFH)
 - `bot/handlers/gps_checkin.py` — GPS check-in (/checkin + location)
 - `bot/handlers/wifi_checkin.py` — WiFi check-in (/checkin_wifi)
+- `bot/handlers/qr_checkin.py` — QR check-in (/checkin_qr + deep link)
+- `bot/handlers/nfc_checkin.py` — NFC check-in (deep link /start nfc_TOKEN)
+- `bot/handlers/manual_checkin.py` — Manual fallback (/manual + selfie + admin approval)
 - `bot/handlers/checkout.py` — Check-out (/checkout)
 - `bot/handlers/wfh.py` — WFH flow (/wfh)
 - `bot/validators/gps_validator.py` — Geofence check (geopy), spoofing detection
@@ -132,14 +135,18 @@ GitHub Actions (Cron)
 ### API (`api/`)
 
 - `api/webhook.py` — Vercel serverless endpoint, nhận Telegram webhook
+- `api/qr/current.py` — GET /api/qr/current (JSON + base64 QR image)
 - `api/cron/morning.py` — Nhắc check-in 8:30 cho active users chưa check-in
 - `api/cron/evening.py` — Nhắc check-out 17:45 cho users đã check-in chưa checkout
+- `api/cron/qr_refresh.py` — Cron tạo QR mới mỗi 5 phút (giờ làm việc)
 
 ### Services (`services/`)
 
 - `services/user_service.py` — Register, activate, reject, is_admin
 - `services/checkin_service.py` — Checkin/checkout/WFH, working hours, duplicate check
 - `services/office_service.py` — Office CRUD, WiFi whitelist management
+- `services/qr_service.py` — QR session CRUD, generate QR image, validate token
+- `services/nfc_service.py` — NFC token CRUD, validate, list, deactivate
 - `services/cron_helpers.py` — Shared cron utilities (auth, Telegram API via httpx)
 
 ### Database (`db/`)
@@ -197,8 +204,8 @@ GitHub Actions (Cron)
 
 ## 11. Trạng thái dự án
 
-- **Version**: 0.1.0 (Unreleased)
-- **Phase**: Phase 1 — MVP Core (hoàn thành Wave 1 + Wave 2)
+- **Version**: 0.2.0 (Unreleased)
+- **Phase**: Phase 2 — Check-in Methods (hoàn thành)
 - **Target go-live**: 4 tuần từ kick-off
 - **Team size**: 1–2 devs
 
@@ -207,10 +214,11 @@ GitHub Actions (Cron)
 - Phase 0: Bot scaffold, webhook, /start, Supabase schema + seed
 - Phase 1 Wave 1: DB client, services (user, checkin, office), validators (GPS, WiFi)
 - Phase 1 Wave 2: Bot handlers (start, admin, checkin), cron reminders (morning, evening)
+- Phase 2: QR System, NFC System, Manual Fallback — 4 phương thức check-in hoạt động
 
 ### Next milestone
 
-- Phase 2: QR System, NFC System, Manual Fallback
+- Phase 3: Admin Panel, Leave Management, Báo cáo
 
 → Lộ trình chi tiết: [DEV_ROADMAP.md](./DEV_ROADMAP.md)
 

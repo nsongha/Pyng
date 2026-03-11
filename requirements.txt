@@ -7,9 +7,9 @@ python-dotenv==1.0.0
 # Database (Phase 1)
 # supabase SDK removed — dùng REST API trực tiếp qua httpx (tránh conflict version)
 
-# QR Code (Phase 1+)
-# qrcode[pil]==7.4.2
-# Pillow==10.2.0
+# QR Code (Phase 2)
+qrcode[pil]==7.4.2
+Pillow==10.2.0
 
 # Report (Phase 2+)
 # openpyxl==3.1.2

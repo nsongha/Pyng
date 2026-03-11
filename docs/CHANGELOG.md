@@ -7,7 +7,29 @@
 
 ## [Unreleased]
 
+### feat
+
+- **Phase 2 — QR System** (Stream A):
+  - `services/qr_service.py` — QR session CRUD, generate QR image (qrcode+Pillow), validate token, cleanup expired
+  - `bot/handlers/qr_checkin.py` — QR check-in via deep link + manual input (/checkin_qr)
+  - `api/qr/current.py` — GET /api/qr/current (JSON + base64 QR image)
+  - `api/cron/qr_refresh.py` — Cron endpoint tạo QR mới mỗi 5 phút (giờ làm việc)
+  - `qr/index.html` — QR display page: auto-fetch, countdown timer, deep link fallback
+  - `bot/handlers/start.py` — Deep link routing: /start qr_TOKEN, /start nfc_TOKEN
+  - `bot/handlers/admin.py` — /admin_qr: xem QR config, tạo QR mới
+- **Phase 2 — NFC System** (Stream B):
+  - `services/nfc_service.py` — NFC token CRUD, validate, list, deactivate
+  - `bot/handlers/nfc_checkin.py` — NFC check-in via deep link (/start nfc_TOKEN)
+  - `bot/handlers/admin.py` — /admin_nfc: tạo token, xem danh sách, vô hiệu hóa, hiển thị deep link
+- **Phase 2 — Manual Fallback** (Stream C):
+  - `bot/handlers/manual_checkin.py` — /manual check-in flow: lý do → selfie → pending admin
+  - `bot/handlers/admin.py` — Manual approval: admin nhận ảnh + duyệt/từ chối inline buttons
+  - `bot/handlers/checkin.py` — Re-export thêm QR + manual handlers
+  - `bot/app.py` — Register QR, NFC, manual admin handlers
+
 ### fix
+
+- **admin.py**: Fix `db.update()` gọi sai signature cho manual approval (P0)
 
 - **Vercel deploy**: Bỏ `supabase` SDK — conflict httpx version với `python-telegram-bot`
   - Rewrite `db/client.py` → lightweight REST wrapper qua `httpx` (gọi PostgREST API trực tiếp)

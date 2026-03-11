@@ -1,208 +1,293 @@
-# Phase 1 — MVP Core Task Board
+# Phase 2 Task Board — Check-in Methods (v0.2.0)
+
+> 🎯 Mục tiêu: Thêm QR Code + NFC + Manual Fallback check-in
+> Version target: v0.2.0
+
+## Thuật ngữ
+
+- **Stream**: Nhóm tasks theo domain/concern — mỗi stream chạy trong 1 conversation riêng
+- **Wave**: Đợt chạy, gộp 1+ streams cùng execution order (sequential trước, parallel sau)
 
 ## Parallel Execution Strategy
 
-**Mục tiêu**: Nhân viên có thể đăng ký qua bot và check-in bằng GPS + WiFi. Scheduler nhắc nhở hoạt động.
+Phase này có **15 tasks** chia **3 streams**, **2 waves**:
 
-**Streams**: 3 streams song song, tối thiểu file overlap:
+| Stream                 | Domain                          | Scope                                          | Wave |
+| ---------------------- | ------------------------------- | ---------------------------------------------- | ---- |
+| 🎫 **QR System**       | Services + Bot + API + Frontend | `services/`, `bot/handlers/`, `api/qr/`, `qr/` | 1    |
+| 🏷️ **NFC System**      | Services + Bot + Admin          | `services/`, `bot/handlers/`                   | 2    |
+| 📸 **Manual Fallback** | Bot + Admin                     | `bot/handlers/`                                | 2    |
 
-| Stream                 | Domain                                                           | Scope                                                |
-| ---------------------- | ---------------------------------------------------------------- | ---------------------------------------------------- |
-| 🛢️ Database & Services | `services/`, `db/`                                               | DB client, user/checkin services                     |
-| 🤖 Bot Handlers        | `bot/handlers/`, `bot/validators/`, `bot/app.py`                 | Registration, checkin, checkout, WFH, admin handlers |
-| ⏰ Infra & Cron        | `api/cron/`, `.github/workflows/`, `requirements.txt`, `config/` | Cron endpoints, GitHub Actions, dependencies         |
+**Execution order**: 🎫 QR System (Wave 1) → 🏷️ NFC + 📸 Manual (Wave 2, song song)
 
-**Execution order**: 🛢️ Database → 🤖 Bot (depends on services) → ⏰ Infra (independent, chạy song song với Bot)
+> **Lý do QR đi trước**: QR handler cần sửa `/start` deep link logic. NFC cũng dùng deep link tương tự nhưng pattern đã được QR thiết lập, nên NFC đi sau sẽ đơn giản hơn.
 
 ---
 
 ## Context: Codebase Hiện Tại
 
-### Foundation đã có (Phase 0 ✅)
+### Tech Stack
 
-- **`config/settings.py`** — Env vars đầy đủ (Telegram, DB, Office, Policy, WiFi, Admin)
-- **`bot/app.py`** — Application factory, chỉ có `/start` handler
-- **`bot/handlers/start.py`** — Hello world response, chưa có registration flow
-- **`api/webhook.py`** — Vercel serverless handler, xử lý POST/GET
-- **`db/schema.sql`** — 10 tables đã tạo trên Supabase (users, offices, checkins, wifi_whitelist, etc.)
-- **`vercel.json`** — Routes + security headers
-- **`requirements.txt`** — Chỉ active: `python-telegram-bot`, `python-dotenv`, `httpx`, `pydantic`. Phần lớn Phase 1 deps đang commented out
+- **Backend**: Python 3.11+ / python-telegram-bot v21.5 (async webhook)
+- **Database**: Supabase PostgreSQL (PostgREST API qua httpx, KHÔNG dùng SDK)
+- **Deploy**: Vercel Serverless (auto-deploy từ GitHub)
+- **Scheduler**: GitHub Actions Cron
+- **Version hiện tại**: v0.1.0 (Phase 1 hoàn thành)
 
-### Chưa có
+### Foundation Available
 
-- `services/` — trống (chỉ `__init__.py`)
-- `bot/validators/` — trống (chỉ `__init__.py`)
-- `api/cron/` — trống
-- DB client/connection module chưa có
-- Không có tests
+- `db/client.py` — REST wrapper (select, insert, update, delete) qua PostgREST API
+- `db/schema.sql` — Đã có sẵn tables: `qr_sessions`, `nfc_tokens`, `checkins` (method supports 'qr'|'nfc'|'manual')
+- `services/checkin_service.py` — `create_checkin()`, `has_checked_in_today()`, `get_today_checkin()`
+- `services/office_service.py` — `get_active_office()`
+- `services/user_service.py` — `register_user()`, `get_by_telegram_id()`
+- `bot/handlers/_helpers.py` — `get_active_user_or_none()`, `get_ontime_status()`, `format_current_time()`
+- `bot/handlers/checkin.py` — Re-export module, `get_checkin_handlers()` tập hợp tất cả handlers
+- `bot/handlers/start.py` — `/start` registration flow (ConversationHandler) — **CHƯA xử lý deep link args**
+- `bot/app.py` — Application factory, đăng ký handlers
+- `config/settings.py` — `QR_EXPIRE_SECONDS=300`, `QR_DISPLAY_URL`, `ADMIN_TELEGRAM_IDS`, `ADMIN_GROUP_ID`
+- `qr/index.html` — QR display page (placeholder, TODO fetch từ API)
+- `requirements.txt` — `qrcode[pil]` và `Pillow` đã ghi sẵn (commented) chờ uncomment
 
----
+### DB Schema sẵn có
 
-## Stream 🛢️ Database & Services
+```sql
+-- QR Sessions (sẵn)
+CREATE TABLE qr_sessions (
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(100) UNIQUE NOT NULL,
+    office_id INT REFERENCES offices(id),
+    created_at TIMESTAMP DEFAULT NOW(),
+    expire_at TIMESTAMP NOT NULL,
+    is_used BOOLEAN DEFAULT FALSE
+);
 
-**Owner**: Backend Core
-**Scope**: `services/`, `db/`, `requirements.txt`
+-- NFC Tokens (sẵn)
+CREATE TABLE nfc_tokens (
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(100) UNIQUE NOT NULL,
+    office_id INT REFERENCES offices(id),
+    location VARCHAR(200),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
-| #   | Task                                                                                                | Status | Priority | Dependencies | Files affected                     |
-| --- | --------------------------------------------------------------------------------------------------- | ------ | -------- | ------------ | ---------------------------------- |
-| A1  | Cài đặt Phase 1 dependencies (`geopy`, `pydantic`; `httpx` qua telegram bot)                        | ✅     | P0       | -            | `requirements.txt`                 |
-| A2  | Tạo DB client module — REST wrapper qua httpx (⚠️ không dùng supabase SDK, xem ADR-012)             | ✅     | P0       | A1           | `db/client.py`                     |
-| A3  | Tạo `services/user_service.py` — CRUD users (register, get_by_telegram_id, update status, is_admin) | ✅     | P0       | A2           | `services/user_service.py`         |
-| A4  | Tạo `services/checkin_service.py` — create checkin, get today's checkin, check duplicate, checkout  | ✅     | P0       | A2           | `services/checkin_service.py`      |
-| A5  | Tạo `bot/validators/gps_validator.py` — geofence check, distance calc, spoofing detection           | ✅     | P0       | A1           | `bot/validators/gps_validator.py`  |
-| A6  | Tạo `bot/validators/wifi_validator.py` — SSID whitelist check                                       | ✅     | P1       | A2           | `bot/validators/wifi_validator.py` |
-| A7  | Tạo `services/office_service.py` — CRUD offices, get active office, update geofence                 | ✅     | P1       | A2           | `services/office_service.py`       |
+-- Checkins (sẵn — method đã support 'qr', 'nfc', 'manual')
+-- is_manual_approved BOOLEAN, approved_by BIGINT
+```
 
-**Acceptance Criteria:**
+### API Endpoints Available
 
-- A2: `db/client.py` gọi PostgREST API thành công qua httpx (⚠️ không dùng supabase SDK — xem ADR-012 trong DECISIONS.md)
-- A3: Register user, check exists, get by telegram_id hoạt động
-- A4: Tạo record checkin/checkout, lấy checkin hôm nay, chặn duplicate
-- A5: Tính distance chính xác, phát hiện spoofing (speed > 500km/h)
-- A6: Match SSID với whitelist từ DB
-- A7: Get office coordinates, update radius
+| Method | Path                | Mô tả                         |
+| ------ | ------------------- | ----------------------------- |
+| POST   | `/api/webhook`      | Nhận Telegram webhook updates |
+| GET    | `/api/cron/morning` | Nhắc check-in 08:30           |
+| GET    | `/api/cron/evening` | Nhắc check-out 17:45          |
 
----
+### Patterns cần tuân theo
 
-## Stream 🤖 Bot Handlers
-
-**Owner**: Bot Layer
-**Scope**: `bot/handlers/`, `bot/app.py`
-
-| #   | Task                                                                                           | Status | Priority | Dependencies | Files affected                          |
-| --- | ---------------------------------------------------------------------------------------------- | ------ | -------- | ------------ | --------------------------------------- |
-| B1  | Refactor `/start` → registration flow (nhập tên, email, chờ admin duyệt) + ConversationHandler | ✅     | P0       | A3 ✅        | `bot/handlers/start.py`, `bot/app.py`   |
-| B2  | Admin approval flow — notification + inline buttons (Duyệt / Từ chối)                          | ✅     | P0       | A3 ✅        | `bot/handlers/admin.py`, `bot/app.py`   |
-| B3  | GPS check-in handler — nhận location, validate, lưu DB, response đẹp                           | ✅     | P0       | A4, A5 ✅    | `bot/handlers/checkin.py`, `bot/app.py` |
-| B4  | WiFi check-in handler — nhập SSID, validate, lưu DB                                            | ✅     | P0       | A4, A6 ✅    | `bot/handlers/checkin.py`               |
-| B5  | Check-out handler — flow checkout, tính working hours                                          | ✅     | P1       | A4 ✅        | `bot/handlers/checkin.py`               |
-| B6  | WFH flow — đăng ký WFH, check limit 2 lần/tháng                                                | ✅     | P1       | A4 ✅        | `bot/handlers/checkin.py`               |
-| B7  | Admin GPS settings — set geofence radius qua bot                                               | ✅     | P2       | A7 ✅        | `bot/handlers/admin.py`                 |
-| B8  | Admin WiFi whitelist management — thêm/xóa SSID                                                | ✅     | P2       | A6 ✅        | `bot/handlers/admin.py`                 |
-
-**Acceptance Criteria:**
-
-- B1: User mới → nhập tên → nhập email → lưu DB pending → admin nhận notification
-- B2: Admin bấm Duyệt → user nhận thông báo "Đã duyệt", status = active
-- B3: Share location → validate geofence → success/fail response đầy đủ (streak, điểm, thời gian)
-- B4: Nhập WiFi SSID → match whitelist → check-in thành công
-- B5: `/checkout` → tính working hours → lưu DB → response đẹp
-- B6: WFH → check 2 lần/tháng → lưu → confirm
-- B7: Admin thay đổi radius → cập nhật office trong DB
-- B8: Admin thêm/xóa WiFi SSID → cập nhật whitelist
+1. **Handler pattern**: Mỗi handler file export hàm `get_xxx_handler()` hoặc `get_xxx_handlers()`
+2. **Service pattern**: Business logic trong `services/`, KHÔNG trong handler
+3. **DB pattern**: Dùng `db.client` (select/insert/update/delete), KHÔNG import httpx trực tiếp
+4. **Deep link**: `/start qr_TOKEN` → `context.args = ["qr_TOKEN"]` (python-telegram-bot tự parse)
+5. **Admin check**: Dùng `ADMIN_TELEGRAM_IDS` hoặc kiểm tra `user["role"] == "admin"`
 
 ---
 
-## Stream ⏰ Infra & Cron
+## Stream 🎫 A — QR System
 
-**Owner**: DevOps / Scheduler
-**Scope**: `api/cron/`, `.github/workflows/`
+**Owner**: Services + Bot + API + Frontend
+**Scope**: `services/qr_service.py`, `bot/handlers/qr_checkin.py`, `bot/handlers/start.py`, `api/qr/`, `qr/index.html`, `bot/handlers/checkin.py`, `bot/app.py`, `requirements.txt`, `config/settings.py`
 
-| #   | Task                                                                                   | Status | Priority | Dependencies | Files affected                         |
-| --- | -------------------------------------------------------------------------------------- | ------ | -------- | ------------ | -------------------------------------- |
-| C1  | Tạo cron morning reminder endpoint (`/api/cron/morning.py`) — gửi nhắc check-in 8:30   | ✅     | P0       | A3           | `api/cron/morning.py`                  |
-| C2  | Tạo cron evening reminder endpoint (`/api/cron/evening.py`) — gửi nhắc check-out 17:45 | ✅     | P1       | A3, A4       | `api/cron/evening.py`                  |
-| C3  | Setup GitHub Actions Cron workflows (morning 8:30, evening 17:45)                      | ✅     | P1       | C1, C2       | `.github/workflows/cron-reminders.yml` |
+| #   | Task                           | Status | Priority | Dependencies | Files affected                          |
+| --- | ------------------------------ | ------ | -------- | ------------ | --------------------------------------- |
+| A1  | Uncomment QR dependencies      | ✅     | P0       | —            | `requirements.txt`                      |
+| A2  | QR Service (CRUD + generate)   | ✅     | P0       | A1           | `services/qr_service.py` [NEW]          |
+| A3  | QR API endpoint                | ✅     | P0       | A2           | `api/qr/current.py` [NEW]               |
+| A4  | QR display page (auto-refresh) | ✅     | P0       | A3           | `qr/index.html`                         |
+| A5  | Deep link handler (start.py)   | ✅     | P0       | A2           | `bot/handlers/start.py`                 |
+| A6  | QR checkin handler             | ✅     | P0       | A2, A5       | `bot/handlers/qr_checkin.py` [NEW]      |
+| A7  | Register QR handlers           | ✅     | P0       | A6           | `bot/handlers/checkin.py`, `bot/app.py` |
+| A8  | Admin QR config                | ✅     | P1       | A2           | `bot/handlers/admin.py`                 |
 
 **Acceptance Criteria:**
 
-- C1: Endpoint `/api/cron/morning` → gửi tin nhắn nhắc check-in cho all active users, có xác thực CRON_SECRET
-- C2: Endpoint `/api/cron/evening` → gửi nhắc check-out cho users đã check-in nhưng chưa check-out
-- C3: GitHub Actions trigger đúng giờ (UTC+7), gọi endpoints thành công
+- A1: `qrcode[pil]==7.4.2` và `Pillow==10.2.0` uncommented + verify `pip install -r requirements.txt` pass
+- A2: `create_qr_session()` tạo token unique, lưu DB với expire 5p. `validate_qr_token()` check tồn tại + chưa used + chưa expired. `generate_qr_image()` trả về PNG bytes. `get_current_qr()` trả về QR đang active. `cleanup_expired_qr()` xóa QR quá hạn.
+- A3: `GET /api/qr/current` trả về QR image (PNG) hoặc JSON `{token, expire_at, qr_url}`. Cron endpoint `GET /api/cron/qr_refresh.py` tạo QR mới mỗi 5 phút (giờ làm việc)
+- A4: `qr/index.html` fetch từ `/api/qr/current` mỗi 30s, hiển thị QR image + countdown timer. Deep link URL hiển thị dưới QR (fallback nếu scan không được)
+- A5: `/start qr_TOKEN` → validate token → check-in nếu hợp lệ. `/start nfc_TOKEN` → parse nhưng chưa xử lý (để Stream B). Backward compatible — `/start` không args vẫn chạy registration flow
+- A6: `/checkin_qr` command cho manual input (gõ mã 6 ký tự). `handle_qr_deeplink()` xử lý logic sau khi parse deep link
+- A7: Thêm QR handlers vào `get_checkin_handlers()` và `create_bot()`
+- A8: Admin xem QR display link, config expire time (optional, P1)
+
+---
+
+## Stream 🏷️ B — NFC System
+
+**Owner**: Services + Bot + Admin
+**Scope**: `services/nfc_service.py`, `bot/handlers/nfc_checkin.py`, `bot/handlers/start.py`, `bot/handlers/admin.py`, `bot/handlers/checkin.py`
+
+| #   | Task                              | Status | Priority | Dependencies   | Files affected                                                   |
+| --- | --------------------------------- | ------ | -------- | -------------- | ---------------------------------------------------------------- |
+| B1  | NFC Service (CRUD + validate)     | ✅     | P0       | A5 (deep link) | `services/nfc_service.py` [NEW]                                  |
+| B2  | NFC checkin handler               | ✅     | P0       | B1, A5         | `bot/handlers/nfc_checkin.py` [NEW]                              |
+| B3  | Register NFC handlers + deep link | ✅     | P0       | B2             | `bot/handlers/checkin.py`, `bot/handlers/start.py`, `bot/app.py` |
+| B4  | Admin NFC management              | ✅     | P1       | B1             | `bot/handlers/admin.py`                                          |
+
+**Acceptance Criteria:**
+
+- B1: `create_nfc_token()` tạo token lưu DB. `validate_nfc_token()` check tồn tại + is_active. `list_nfc_tokens()` cho admin. `deactivate_nfc_token()` vô hiệu hóa
+- B2: `handle_nfc_deeplink()` validate token → check-in nếu hợp lệ. Error messages rõ ràng (token hết hạn, không hợp lệ...)
+- B3: Deep link `/start nfc_TOKEN` → route tới NFC handler. Thêm vào `get_checkin_handlers()` + `create_bot()`
+- B4: `/admin_nfc` → tạo NFC token mới, xem danh sách, vô hiệu hóa token. Hiển thị deep link URL cho mỗi token (để ghi vào NFC tag)
+
+---
+
+## Stream 📸 C — Manual Fallback
+
+**Owner**: Bot + Admin
+**Scope**: `bot/handlers/manual_checkin.py`, `bot/handlers/admin.py`, `bot/handlers/checkin.py`, `bot/app.py`
+
+| #   | Task                                | Status | Priority | Dependencies | Files affected                          |
+| --- | ----------------------------------- | ------ | -------- | ------------ | --------------------------------------- |
+| C1  | Manual checkin handler (selfie)     | ✅     | P0       | —            | `bot/handlers/manual_checkin.py` [NEW]  |
+| C2  | Admin notification + approve/reject | ✅     | P0       | C1           | `bot/handlers/admin.py`                 |
+| C3  | Register manual handlers            | ✅     | P0       | C1, C2       | `bot/handlers/checkin.py`, `bot/app.py` |
+
+**Acceptance Criteria:**
+
+- C1: `/manual` hoặc `/checkin_manual` → ConversationHandler: hỏi lý do → nhận ảnh selfie → lưu pending. Validate file size. Hiển thị thông báo "Đang chờ admin duyệt..."
+- C2: Admin nhận notification với ảnh + lý do. Inline buttons "Duyệt" / "Từ chối". Duyệt → tạo checkin record (method='manual', is_manual_approved=true). Từ chối → gửi lý do cho user
+- C3: Thêm manual handlers vào `get_checkin_handlers()` + `create_bot()`
 
 ---
 
 ## Cross-Stream Dependencies
 
-| Task | Depends on   | Type         | Notes                                             |
-| ---- | ------------ | ------------ | ------------------------------------------------- |
-| B1   | A3 ✅        | cross-stream | Registration cần user_service                     |
-| B2   | A3 ✅        | cross-stream | Admin approval cần user_service                   |
-| B3   | A4 ✅, A5 ✅ | cross-stream | GPS checkin cần checkin_service + gps_validator   |
-| B4   | A4 ✅, A6 ✅ | cross-stream | WiFi checkin cần checkin_service + wifi_validator |
-| B5   | A4 ✅        | cross-stream | Checkout cần checkin_service                      |
-| C1   | A3           | cross-stream | Morning cron cần user_service                     |
-| C2   | A3, A4       | cross-stream | Evening cron cần user+checkin services            |
+### Dependency Map
 
-**Execution Order khuyến nghị:**
+| Task | Depends on | Type         | Notes                                                 |
+| ---- | ---------- | ------------ | ----------------------------------------------------- |
+| A2   | A1         | in-stream    | QR service cần qrcode+Pillow packages                 |
+| A3   | A2         | in-stream    | API endpoint gọi qr_service                           |
+| A4   | A3         | in-stream    | Frontend fetch từ API                                 |
+| A5   | A2         | in-stream    | Deep link cần qr_service validate                     |
+| A6   | A2, A5     | in-stream    | QR checkin dùng service + deep link                   |
+| A7   | A6         | in-stream    | Register sau khi handler xong                         |
+| B1   | A5         | cross-stream | NFC cần deep link routing pattern đã thiết lập bởi QR |
+| B2   | B1, A5     | cross-stream | NFC handler cần service + deep link từ Wave 1         |
+| B3   | B2         | in-stream    | Register sau khi handler xong                         |
+| C1   | —          | independent  | Manual không depend stream nào                        |
+| C2   | C1         | in-stream    | Admin approve cần manual handler gửi notification     |
+| C3   | C1, C2     | in-stream    | Register sau khi handlers xong                        |
 
-1. 🛢️ Stream A (Database & Services) → chạy **trước**
-2. 🤖 Stream B (Bot Handlers) + ⏰ Stream C (Infra) → chạy **song song** sau khi A1-A5 xong
+### Execution Order
+
+1. **Wave 1** (Sequential ⛓️): 🎫 Stream A (QR System) — thiết lập deep link pattern + QR infrastructure
+2. **Wave 2** (Parallel 🔀): 🏷️ Stream B (NFC) + 📸 Stream C (Manual) — independent, chạy song song
+
+---
+
+## Conflict Prevention Rules
+
+### Shared Files
+
+| File                      | Streams dùng     | Tasks      | Rule                                                                                         |
+| ------------------------- | ---------------- | ---------- | -------------------------------------------------------------------------------------------- |
+| `bot/handlers/start.py`   | 🎫 A, 🏷️ B       | A5, B3     | Stream A sửa TRƯỚC (thêm deep link routing). Stream B chỉ thêm NFC case vào existing routing |
+| `bot/handlers/checkin.py` | 🎫 A, 🏷️ B, 📸 C | A7, B3, C3 | Stream A sửa TRƯỚC. Stream B + C đọc lại rồi thêm import                                     |
+| `bot/app.py`              | 🎫 A, 🏷️ B, 📸 C | A7, B3, C3 | Stream A sửa TRƯỚC. Stream B + C đọc lại rồi thêm handlers                                   |
+| `bot/handlers/admin.py`   | 🎫 A, 🏷️ B, 📸 C | A8, B4, C2 | Mỗi stream thêm section mới (append). Tránh sửa code cũ                                      |
+| `requirements.txt`        | 🎫 A             | A1         | Chỉ Stream A sửa ở Wave 1                                                                    |
+| `config/settings.py`      | 🎫 A             | —          | Chỉ đọc, KHÔNG sửa (đã có QR_EXPIRE_SECONDS, QR_DISPLAY_URL)                                 |
+
+### Merge Strategy
+
+- Mỗi stream KHÔNG commit riêng — gộp commit ở bước Finalize
+- Nếu 2 streams cùng cần sửa 1 file → stream chạy SAU phải đọc lại file trước khi sửa
+- Sync point: sau Wave 1 hoàn thành → verify trước khi bắt đầu Wave 2
+- **Shared file strategy cho `bot/handlers/start.py`**:
+  - Wave 1 (Stream A): Thêm `_handle_deep_link()` function + if/elif routing (qr case)
+  - Wave 2 (Stream B): Đọc lại file → thêm `elif args[0].startswith("nfc_")` vào existing routing
 
 ---
 
 ## Progress Summary
 
-| Stream                 | Total  | Done   | Remaining | %        |
-| ---------------------- | ------ | ------ | --------- | -------- |
-| 🛢️ Database & Services | 7      | 7      | 0         | 100%     |
-| 🤖 Bot Handlers        | 8      | 8      | 0         | 100%     |
-| ⏰ Infra & Cron        | 3      | 3      | 0         | 100%     |
-| **TOTAL**              | **18** | **18** | **0**     | **100%** |
+| Stream        | Total  | Done   | Remaining | %        |
+| ------------- | ------ | ------ | --------- | -------- |
+| 🎫 A (QR)     | 8      | 8      | 0         | 100%     |
+| 🏷️ B (NFC)    | 4      | 4      | 0         | 100%     |
+| 📸 C (Manual) | 3      | 3      | 0         | 100%     |
+| **All**       | **15** | **15** | **0**     | **100%** |
 
 ---
 
 ## Execution Playbook
 
-### Wave 1 — Foundation (Sequential ⛓️)
+### Wave 1 — QR System (Sequential ⛓️)
 
-> Stream 🛢️ phải chạy TRƯỚC vì Stream 🤖 và ⏰ đều depend on services/validators.
+> Stream 🎫 A phải chạy TRƯỚC vì thiết lập deep link pattern + QR infrastructure.
 
-**Streams**: 🛢️ Database & Services
-**Chạy**: 1 chat duy nhất
+**Streams**: 🎫 A — QR System
+**Chạy**: Tuần tự, 1 chat
 
-#### Prompt — Stream 🛢️ Database & Services:
+#### Prompt — Stream 🎫 A:
 
 ```
-Triển khai Stream 🛢️ Database & Services trong @TASK_BOARD.md
+Triển khai Stream 🎫 A (QR System) trong @TASK_BOARD.md
 Đọc section "Context: Codebase Hiện Tại" để hiểu foundation.
-Làm từ task P0 trước (A1 → A2 → A3 → A4 → A5), sau đó P1 (A6, A7).
+Đọc "Conflict Prevention Rules" → chỉ sửa files trong scope.
+Làm từ task P0 trước (A1 → A2 → A3 → A4 → A5 → A6 → A7), sau đó P1 (A8).
 ```
 
 **✅ Sau khi Wave 1 xong**:
 
-1. Kiểm tra TASK_BOARD.md → confirm A1-A7 = ✅
-2. Verify: `python3 -m py_compile db/client.py services/user_service.py services/checkin_service.py bot/validators/gps_validator.py bot/validators/wifi_validator.py services/office_service.py`
+1. Kiểm tra TASK_BOARD.md → confirm tất cả tasks Wave 1 = ✅
+2. Verify: `python3 -m py_compile services/qr_service.py bot/handlers/qr_checkin.py bot/handlers/start.py api/qr/current.py`
 3. Bắt đầu Wave 2
 
 ---
 
-### Wave 2 — Bot + Infra (Parallel 🔀)
+### Wave 2 — NFC + Manual (Parallel 🔀)
 
-> 🤖 Bot Handlers và ⏰ Infra KHÔNG depend nhau → chạy SONG SONG trong 2 chat riêng.
+> Các streams này KHÔNG depend nhau → chạy SONG SONG trong chat riêng.
 
-**Streams**: 🤖 Bot Handlers + ⏰ Infra & Cron
-**Chạy**: 2 chat song song
+**Streams**: 🏷️ B (NFC) + 📸 C (Manual)
+**Chạy**: Mỗi stream 1 chat riêng, chạy cùng lúc
 
-#### Prompt — Stream 🤖 Bot Handlers (Chat 1):
-
-```
-Triển khai Stream 🤖 Bot Handlers trong @TASK_BOARD.md
-Stream 🛢️ Database & Services đã hoàn thành (Wave 1).
-Đọc section "Context" + code mới trong db/client.py, services/, bot/validators/.
-Làm từ task P0 trước (B1 → B2 → B3 → B4), sau đó P1 (B5, B6), cuối cùng P2 (B7, B8).
-```
-
-#### Prompt — Stream ⏰ Infra & Cron (Chat 2):
+#### Prompt — Stream 🏷️ B (Chat 1):
 
 ```
-Triển khai Stream ⏰ Infra & Cron trong @TASK_BOARD.md
-Stream 🛢️ Database & Services đã hoàn thành (Wave 1).
-Đọc section "Context" + code mới trong db/client.py, services/.
+Triển khai Stream 🏷️ B (NFC System) trong @TASK_BOARD.md
+Stream 🎫 A (QR System) đã hoàn thành (Wave 1). Đọc section "Context" + code mới trong start.py
+Đọc "Conflict Prevention Rules" → chỉ sửa files trong scope.
+Đọc lại bot/handlers/start.py vì Wave 1 đã sửa (thêm deep link routing).
+Làm từ task P0 trước (B1 → B2 → B3), sau đó P1 (B4).
+```
+
+#### Prompt — Stream 📸 C (Chat 2):
+
+```
+Triển khai Stream 📸 C (Manual Fallback) trong @TASK_BOARD.md
+Stream 🎫 A (QR System) đã hoàn thành (Wave 1). Đọc section "Context" + code mới.
+Đọc "Conflict Prevention Rules" → chỉ sửa files trong scope.
+Đọc lại bot/handlers/checkin.py và bot/app.py vì Wave 1 đã sửa.
 Làm task C1 → C2 → C3.
 ```
 
 **✅ Sau khi Wave 2 xong** (cả 2 chat đều hoàn thành):
 
-1. Confirm TASK_BOARD.md → 18/18 tasks = ✅
-2. Mở chat mới, chạy bước Verify & Review (bên dưới)
+1. Confirm TASK_BOARD.md → tất cả tasks = ✅
+2. Mở chat mới, chạy Verify & Finalize
 
 ---
 
 ### Nối tiếp stream (nếu 1 chat bị ngắt giữa chừng):
 
 ```
-Tiếp tục Stream [🤖/⏰] trong @TASK_BOARD.md — các task [X1, X2] đã xong (✅), tiếp từ [X3].
+Tiếp tục Stream [X] trong @TASK_BOARD.md — các task [X1, X2] đã xong (✅), tiếp từ [X3].
 ```
 
 ---
@@ -210,9 +295,15 @@ Tiếp tục Stream [🤖/⏰] trong @TASK_BOARD.md — các task [X1, X2] đã 
 ### Sau khi TẤT CẢ waves xong — Verify & Finalize:
 
 ```
-Tất cả streams Phase 1 đã xong. Chạy bước 6-7 của /parallel-phase:
-- Verify build (py_compile tất cả files)
+Tất cả streams Phase 2 đã xong. Chạy bước 6-7 của /parallel-phase:
+- Verify build (py_compile tất cả files mới/sửa)
 - Confirm TASK_BOARD.md 100%
 - Chạy /code-review trên toàn bộ thay đổi phase
 - Finalize: gộp changelog, update PROJECT_CONTEXT.md + DEV_ROADMAP.md, commit
 ```
+
+---
+
+**Status icons:** 📋 TODO → 🔄 IN PROGRESS → ✅ DONE → ⏸️ BLOCKED
+
+**Priority:** P0 (must have) → P1 (should have) → P2 (nice to have)
