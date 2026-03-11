@@ -530,7 +530,6 @@ def get_leave_request_handler() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[
             CommandHandler("leave", leave_command),
-            CommandHandler("xinnghỉ", leave_command),
             CommandHandler("xinnghi", leave_command),
         ],
         states={
