@@ -364,3 +364,21 @@ Report:
 - Build command: `cd miniapp && npx vite build && rm index.html` (xóa source sau build)
 - Set `NODE_VERSION=22` trên Vercel Settings > Environment Variables
 
+### DEPLOY-002: Miniapp blank (trắng/tối) khi mở từ Telegram
+
+**Severity**: High (P1)
+**Status**: ✅ Resolved (2026-03-12)
+**Affects**: Mini App (Telegram WebApp)
+**Files**: `miniapp/src/App.tsx`
+
+**Triệu chứng**:
+- Truy cập `https://pyng.vercel.app/miniapp/` từ browser → hiển thị đúng UI
+- Mở miniapp từ Telegram Bot (`@pyng85111_bot`) → trang trống hoàn toàn
+
+**Root Cause**: `BrowserRouter basename="/miniapp/"` (có trailing slash) không match URL `/miniapp` (không có trailing slash) mà Telegram/BotFather gửi → React Router không render gì.
+- BotFather Menu Button URL: `https://pyng.vercel.app/miniapp` (không trailing slash)
+- Telegram mở URL dạng: `https://pyng.vercel.app/miniapp#tgWebAppData=...`
+- React Router warning: `<Router basename="/miniapp/"> is not able to match the URL "/miniapp"`
+
+**Fix**: Đổi `basename="/miniapp/"` → `basename="/miniapp"` trong `App.tsx`
+

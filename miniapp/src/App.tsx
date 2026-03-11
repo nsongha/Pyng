@@ -13,7 +13,7 @@ import { BottomNav } from './components/BottomNav';
 
 function App() {
   return (
-    <BrowserRouter basename="/miniapp/">
+    <BrowserRouter basename="/miniapp">
       <TelegramProvider>
         <Routes>
           <Route path="/" element={<Dashboard />} />
