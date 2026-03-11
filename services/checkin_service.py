@@ -53,6 +53,7 @@ def create_checkin(
     distance_m: int | None = None,
     wifi_ssid: str | None = None,
     note: str | None = None,
+    mood: str | None = None,
 ) -> dict:
     """Tạo record check-in/check-out.
 
@@ -66,6 +67,7 @@ def create_checkin(
         distance_m: Khoảng cách tới văn phòng (mét).
         wifi_ssid: Tên WiFi (nếu method=wifi).
         note: Ghi chú (optional).
+        mood: 'great' | 'good' | 'tired' | 'sos' (optional, Phase 4).
 
     Returns:
         dict: Checkin record vừa tạo.
@@ -92,6 +94,8 @@ def create_checkin(
         data["wifi_ssid"] = wifi_ssid
     if note is not None:
         data["note"] = note
+    if mood is not None:
+        data["mood"] = mood
 
     return db.insert("checkins", data)
 
@@ -209,4 +213,102 @@ def create_wfh_checkin(user_id: int, note: str | None = None) -> dict:
         "checkin": checkin,
         "wfh_count": wfh_count + 1,
         "wfh_limit": WFH_LIMIT_PER_MONTH,
+    }
+
+
+# ------------------------------------------------------------------
+# Phase 4: Gamification Integration
+# ------------------------------------------------------------------
+
+def process_gamification_after_checkin(
+    user_id: int,
+    checkin_type: str,
+    *,
+    is_ontime: bool = False,
+    is_early: bool = False,
+    is_wfh: bool = False,
+    late_minutes: int = 0,
+) -> dict:
+    """Xử lý gamification sau khi check-in thành công.
+
+    Orchestrator gọi gamification_service để:
+    1. Tính điểm check-in
+    2. Cộng điểm
+    3. Cập nhật streak (chỉ khi check-in sáng)
+    4. Check first-of-day bonus
+
+    Handler (Wave 2) gọi hàm này sau mỗi check-in thành công.
+    KHÔNG gọi tự động trong create_checkin() để giữ flexibility.
+
+    Args:
+        user_id: ID user.
+        checkin_type: 'in' hoặc 'out'.
+        is_ontime: Đúng giờ (≤5 phút grace).
+        is_early: Sớm ≥15 phút.
+        is_wfh: WFH check-in.
+        late_minutes: Số phút muộn.
+
+    Returns:
+        dict: {
+            "points_earned": int,
+            "reason": str,
+            "streak_info": dict | None (chỉ khi type='in'),
+            "is_first_today": bool,
+            "first_bonus": int,
+        }
+    """
+    from services.gamification_service import (
+        calculate_checkin_points,
+        add_points,
+        update_streak,
+        is_first_checkin_today,
+    )
+
+    # 1. Tính điểm check-in
+    points = calculate_checkin_points(
+        user_id,
+        checkin_type,
+        is_ontime=is_ontime,
+        is_early=is_early,
+        is_wfh=is_wfh,
+        late_minutes=late_minutes,
+    )
+
+    # 2. Xác định reason
+    if is_wfh:
+        reason = "checkin_wfh"
+    elif is_early:
+        reason = "checkin_early"
+    elif is_ontime:
+        reason = "checkin_ontime"
+    elif checkin_type == "out":
+        reason = "checkout"
+    else:
+        reason = f"checkin_late_{late_minutes}min"
+
+    # 3. Cộng điểm
+    if points > 0:
+        add_points(user_id, points, reason)
+
+    # 4. Streak + first-of-day (chỉ check-in sáng)
+    streak_info = None
+    is_first = False
+    first_bonus = 0
+
+    if checkin_type == "in":
+        streak_info = update_streak(user_id, "checkin")
+
+        # Check first checkin today
+        is_first = is_first_checkin_today(user_id)
+        if is_first:
+            from services.gamification_service import POINTS_FIRST_CHECKIN
+            first_bonus = POINTS_FIRST_CHECKIN
+            add_points(user_id, first_bonus, "first_checkin_today")
+
+    return {
+        "points_earned": points + first_bonus,
+        "reason": reason,
+        "streak_info": streak_info,
+        "is_first_today": is_first,
+        "first_bonus": first_bonus,
     }
