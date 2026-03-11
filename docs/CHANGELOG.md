@@ -9,6 +9,13 @@
 
 ### feat
 
+- **Phase 3 — Services Foundation** (Stream A, Wave 1):
+  - `services/config_service.py` — CRUD system_config (get/set upsert, get_all)
+  - `services/leave_service.py` — Leave request CRUD + business logic (auto business days, trừ phép khi approve, remaining days)
+  - `services/report_service.py` — Daily text report, weekly summary, monthly Excel export (2 sheets: Tổng hợp + Chi tiết)
+  - `services/user_service.py` — Thêm get_all_users, update_user, deactivate_user, get_users_by_role
+  - `requirements.txt` — Uncomment openpyxl==3.1.2
+
 - **Phase 2 — QR System** (Stream A):
   - `services/qr_service.py` — QR session CRUD, generate QR image (qrcode+Pillow), validate token, cleanup expired
   - `bot/handlers/qr_checkin.py` — QR check-in via deep link + manual input (/checkin_qr)

@@ -97,6 +97,14 @@ Week 1          Week 2          Week 3          Week 4
 
 **Mục tiêu**: Admin có đủ công cụ quản lý, báo cáo tự động hoạt động
 
+### Wave 1: Services Foundation ✅
+
+- [x] Config Service — system_config CRUD (get/set/get_all)
+- [x] Leave Service — leave request CRUD + business logic
+- [x] Report Service — daily/weekly/monthly reports + Excel export
+- [x] User Service mở rộng — admin CRUD (get_all, update, deactivate, filter by role)
+- [x] Uncomment openpyxl dependency
+
 ### Ngày 15–17: Admin Panel
 
 - [ ] Admin panel đầy đủ (inline keyboard navigation)
