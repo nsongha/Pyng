@@ -46,7 +46,7 @@ def _get_checkin_history(user_id: int, limit: int, offset: int) -> list[dict]:
     """
     rows = db.select(
         "checkins",
-        columns="id,checked_at,type,method,mood,is_ontime",
+        columns="id,checked_at,type,method,mood",
         filters={
             "user_id": user_id,
             "type": "in",
@@ -58,7 +58,7 @@ def _get_checkin_history(user_id: int, limit: int, offset: int) -> list[dict]:
     if offset > 0:
         all_rows = db.select(
             "checkins",
-            columns="id,checked_at,type,method,mood,is_ontime",
+            columns="id,checked_at,type,method,mood",
             filters={
                 "user_id": user_id,
                 "type": "in",
@@ -91,13 +91,16 @@ def _get_checkin_history(user_id: int, limit: int, offset: int) -> list[dict]:
         date_key = ci_dt.strftime("%Y-%m-%d")
         time_out = checkout_by_date.get(date_key)
 
+        # Tính is_ontime từ checked_at (column is_ontime không tồn tại trong DB)
+        is_ontime = not check_is_late(row["checked_at"]) if row.get("method") != "wfh" else True
+
         result.append({
             "date": date_key,
             "time_in": row["checked_at"],
             "time_out": time_out,
             "method": row.get("method"),
             "mood": row.get("mood"),
-            "is_ontime": row.get("is_ontime"),
+            "is_ontime": is_ontime,
         })
 
     return result
@@ -170,7 +173,7 @@ def _get_chart_data(user_id: int, month: int, year: int) -> dict:
 
     checkins = db.select(
         "checkins",
-        columns="id,checked_at,method,mood,is_ontime",
+        columns="id,checked_at,method,mood",
         filters={
             "user_id": user_id,
             "type": "in",

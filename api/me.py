@@ -30,12 +30,17 @@ def _get_checkin_stats_this_month(user_id: int) -> dict:
     Returns dict khớp với TypeScript CheckinStats interface:
         {total_days, late_days, wfh_days, leave_days, ontime_percentage}
 
+    Note: Column `is_ontime` KHÔNG tồn tại trong DB checkins table.
+    Ontime được tính từ `checked_at` timestamp, giống report_service.is_late().
+
     Args:
         user_id: ID user (bảng users.id).
 
     Returns:
         dict: CheckinStats-compatible format.
     """
+    from services.report_service import is_late as check_is_late
+
     tz = get_tz()
     now = datetime.now(tz)
     start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -44,9 +49,10 @@ def _get_checkin_stats_this_month(user_id: int) -> dict:
     else:
         end = start.replace(month=now.month + 1)
 
+    # Note: KHÔNG query is_ontime vì column này không tồn tại trong DB
     rows = db.select(
         "checkins",
-        columns="id,method,is_ontime",
+        columns="id,method,checked_at,type",
         filters={
             "user_id": user_id,
             "type": "in",
@@ -56,9 +62,18 @@ def _get_checkin_stats_this_month(user_id: int) -> dict:
     )
 
     total_days = len(rows)
-    ontime = sum(1 for r in rows if r.get("is_ontime"))
     wfh_days = sum(1 for r in rows if r.get("method") == "wfh")
-    late_days = max(0, total_days - ontime - wfh_days)
+
+    # Tính late từ checked_at (giống report_service.is_late)
+    late_days = 0
+    for r in rows:
+        if r.get("method") == "wfh":
+            continue  # WFH không tính muộn
+        checked_at = r.get("checked_at")
+        if checked_at and check_is_late(checked_at):
+            late_days += 1
+
+    ontime = max(0, total_days - late_days - wfh_days)
 
     # Leave days tháng này (approved)
     leave_rows = db.select(
