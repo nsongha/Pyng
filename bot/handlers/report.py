@@ -21,6 +21,7 @@ from services.report_service import (
     generate_daily_text_report,
     get_weekly_report_data,
     generate_monthly_excel,
+    generate_custom_range_excel,
 )
 from config.timezone import get_tz
 
@@ -57,6 +58,11 @@ async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await _show_report_usage(update)
         return
 
+    # Custom date range: /report YYYY-MM-DD YYYY-MM-DD
+    if len(args) == 2 and "-" in args[0] and "-" in args[1]:
+        await _report_custom_range(update, args[0], args[1])
+        return
+
     sub_command = args[0].lower()
 
     if sub_command == "today":
@@ -76,7 +82,9 @@ async def _show_report_usage(update: Update) -> None:
         "Cách dùng:\n"
         "• `/report today` — Báo cáo hôm nay\n"
         "• `/report week` — Tổng hợp tuần\n"
-        "• `/report month` — Tổng hợp tháng + Excel\n\n"
+        "• `/report month` — Tổng hợp tháng + Excel\n"
+        "• `/report YYYY-MM-DD YYYY-MM-DD` — Excel khoảng ngày\n\n"
+        "Ví dụ: `/report 2026-03-01 2026-03-10`\n\n"
         "Alias: `/baocao`",
         parse_mode="Markdown",
     )
@@ -248,6 +256,63 @@ def _format_monthly_text(data: dict, month: int, year: int) -> str:
     lines.append("\n📎 _File Excel đang được gửi..._")
 
     return "\n".join(lines)
+
+# ============================================================
+# A3: /report YYYY-MM-DD YYYY-MM-DD — Custom date range
+# ============================================================
+
+
+async def _report_custom_range(update: Update, start_str: str, end_str: str) -> None:
+    """Báo cáo theo khoảng ngày tùy chọn — Excel file.
+
+    Args:
+        update: Telegram update.
+        start_str: Ngày bắt đầu dạng YYYY-MM-DD.
+        end_str: Ngày kết thúc dạng YYYY-MM-DD.
+    """
+    # Validate date format
+    try:
+        start_date = date.fromisoformat(start_str)
+        end_date = date.fromisoformat(end_str)
+    except ValueError:
+        await update.message.reply_text(
+            "❌ Định dạng ngày không hợp lệ.\n"
+            "Dùng: `/report YYYY-MM-DD YYYY-MM-DD`\n"
+            "Ví dụ: `/report 2026-03-01 2026-03-10`",
+            parse_mode="Markdown",
+        )
+        return
+
+    if end_date < start_date:
+        await update.message.reply_text("❌ Ngày kết thúc phải >= ngày bắt đầu.")
+        return
+
+    range_days = (end_date - start_date).days + 1
+    if range_days > 90:
+        await update.message.reply_text(
+            f"❌ Khoảng ngày quá dài: {range_days} ngày.\n"
+            f"Tối đa 90 ngày."
+        )
+        return
+
+    await update.message.reply_text(
+        f"⏳ Đang tạo báo cáo {start_str} → {end_str} ({range_days} ngày)..."
+    )
+
+    try:
+        excel_bytes = generate_custom_range_excel(start_date, end_date)
+        filename = f"Pyng_Report_{start_str}_{end_str}.xlsx"
+
+        await update.message.reply_document(
+            document=io.BytesIO(excel_bytes),
+            filename=filename,
+            caption=f"📎 Báo cáo {start_str} → {end_str}",
+        )
+    except ValueError as e:
+        await update.message.reply_text(f"❌ {e}")
+    except Exception as e:
+        logger.exception("Error generating custom range report")
+        await update.message.reply_text("❌ Lỗi khi tạo báo cáo. Thử lại sau.")
 
 
 # ============================================================

@@ -115,7 +115,7 @@ export function Dashboard() {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen pb-8"
+      className="min-h-screen pb-20"
       style={{ backgroundColor: 'var(--tg-bg)' }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}

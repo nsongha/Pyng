@@ -19,7 +19,7 @@ from functools import wraps
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, unquote
 
-from config.settings import TELEGRAM_BOT_TOKEN
+from config.settings import MINI_APP_URL, TELEGRAM_BOT_TOKEN
 
 logger = logging.getLogger(__name__)
 
@@ -168,6 +168,16 @@ def require_auth(method):
 
 
 # ------------------------------------------------------------------
+# CORS Helper
+# ------------------------------------------------------------------
+
+
+def _get_cors_origin() -> str:
+    """Trả về CORS origin: MINI_APP_URL nếu có, fallback '*' cho dev."""
+    return MINI_APP_URL if MINI_APP_URL else "*"
+
+
+# ------------------------------------------------------------------
 # Response Helper
 # ------------------------------------------------------------------
 
@@ -186,8 +196,8 @@ def json_api_response(
     body = json.dumps(data, default=str, ensure_ascii=False).encode("utf-8")
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json")
-    handler.send_header("Access-Control-Allow-Origin", "*")
-    handler.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+    handler.send_header("Access-Control-Allow-Origin", _get_cors_origin())
+    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     handler.send_header("Access-Control-Allow-Headers", "Content-Type, X-Telegram-Init-Data")
     handler.end_headers()
     handler.wfile.write(body)
@@ -200,8 +210,36 @@ def handle_cors_preflight(handler: BaseHTTPRequestHandler) -> None:
         handler: BaseHTTPRequestHandler instance.
     """
     handler.send_response(204)
-    handler.send_header("Access-Control-Allow-Origin", "*")
-    handler.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+    handler.send_header("Access-Control-Allow-Origin", _get_cors_origin())
+    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     handler.send_header("Access-Control-Allow-Headers", "Content-Type, X-Telegram-Init-Data")
     handler.send_header("Access-Control-Max-Age", "86400")
     handler.end_headers()
+
+
+def parse_request_body(handler: BaseHTTPRequestHandler) -> dict:
+    """Parse JSON body từ POST request.
+
+    Đọc Content-Length → self.rfile.read() → json.loads().
+
+    Args:
+        handler: BaseHTTPRequestHandler instance.
+
+    Returns:
+        dict: Parsed JSON body.
+
+    Raises:
+        ValueError: Nếu body rỗng hoặc không phải JSON hợp lệ.
+    """
+    content_length = int(handler.headers.get("Content-Length", 0))
+    if content_length == 0:
+        raise ValueError("Empty request body")
+
+    raw_body = handler.rfile.read(content_length)
+    if not raw_body:
+        raise ValueError("Empty request body")
+
+    try:
+        return json.loads(raw_body.decode("utf-8"))
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")

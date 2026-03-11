@@ -589,6 +589,119 @@ def get_manual_approval_handlers() -> list:
 
 
 # ============================================================
+# A4: Bulk approve manual check-ins (Phase 5)
+# ============================================================
+
+
+async def handle_bulk_approve(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Duyệt tất cả pending manual check-ins cùng lúc.
+
+    Callback data: 'bulk_approve_all'
+    """
+    query = update.callback_query
+
+    if not is_admin(query.from_user.id):
+        await query.answer("⛔ Bạn không có quyền admin.", show_alert=True)
+        return
+
+    await query.answer()
+
+    # Tìm tất cả pending manual check-ins trong bot_data
+    pending_keys = [
+        key for key in context.bot_data
+        if key.startswith("manual_pending_")
+    ]
+
+    if not pending_keys:
+        await query.edit_message_text(
+            "ℹ️ Không có check-in thủ công nào đang chờ duyệt."
+        )
+        return
+
+    approved_count = 0
+    failed_users = []
+
+    for pending_key in pending_keys:
+        pending = context.bot_data.get(pending_key)
+        if not pending:
+            continue
+
+        # Extract telegram_id từ key: "manual_pending_123456789"
+        telegram_id = int(pending_key.replace("manual_pending_", ""))
+        user = pending["user"]
+        reason = pending.get("reason", "")
+
+        try:
+            # Tạo checkin record
+            office = get_active_office()
+            office_id = office["id"] if office else None
+
+            checkin = create_checkin(
+                user_id=user["id"],
+                checkin_type="in",
+                method="manual",
+                office_id=office_id,
+                note=reason,
+            )
+
+            # Update record — set manual approval fields
+            from db import client as _db
+            _db.update(
+                "checkins",
+                {
+                    "is_manual_approved": True,
+                    "approved_by": query.from_user.id,
+                },
+                filters={"id": checkin["id"]},
+            )
+
+            approved_count += 1
+
+            # Notify user
+            try:
+                await context.bot.send_message(
+                    chat_id=telegram_id,
+                    text=(
+                        "✅ **Check-in thủ công đã được duyệt!**\n\n"
+                        f"👤 {user['full_name']}\n"
+                        "📍 Phương thức: Manual (Admin bulk approve)\n\n"
+                        "Chúc bạn ngày làm việc hiệu quả! 💪"
+                    ),
+                    parse_mode="Markdown",
+                )
+            except Exception as e:
+                logger.warning("Cannot notify user %s after bulk approve: %s", telegram_id, e)
+
+        except Exception as e:
+            logger.exception("Bulk approve failed for user %s: %s", pending_key, e)
+            failed_users.append(pending.get("user", {}).get("full_name", "Unknown"))
+
+        # Cleanup
+        context.bot_data.pop(pending_key, None)
+
+    # Summary message
+    result_text = f"✅ **Đã duyệt {approved_count} check-in thủ công**"
+    if failed_users:
+        result_text += f"\n\n⚠️ Lỗi: {', '.join(failed_users)}"
+    result_text += f"\n\nBởi @{query.from_user.username}"
+
+    await query.edit_message_text(result_text, parse_mode="Markdown")
+
+
+def get_bulk_approve_handlers() -> list:
+    """Trả về list handlers cho bulk approve.
+
+    Returns:
+        list: [CallbackQueryHandler]
+    """
+    return [
+        CallbackQueryHandler(handle_bulk_approve, pattern=r"^bulk_approve_all$"),
+    ]
+
+
+# ============================================================
 # B4: Admin NFC management
 # ============================================================
 

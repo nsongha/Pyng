@@ -31,16 +31,18 @@ def _enrich_leaderboard_with_names(leaderboard: list[dict]) -> list[dict]:
     if not leaderboard:
         return leaderboard
 
-    # Batch query tên users
+    # Batch query tất cả user names (1 query thay vì N — fix TD-001)
     user_ids = [entry["user_id"] for entry in leaderboard]
+    all_users = db.select("users", columns="id,full_name")
+    id_set = set(user_ids)
+    name_map = {
+        u["id"]: u.get("full_name", "Unknown")
+        for u in all_users
+        if u["id"] in id_set
+    }
+
     for entry in leaderboard:
-        users = db.select(
-            "users",
-            columns="id,full_name",
-            filters={"id": entry["user_id"]},
-            limit=1,
-        )
-        entry["full_name"] = users[0]["full_name"] if users else "Unknown"
+        entry["full_name"] = name_map.get(entry["user_id"], "Unknown")
 
     return leaderboard
 

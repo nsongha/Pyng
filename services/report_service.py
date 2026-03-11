@@ -478,3 +478,152 @@ def generate_monthly_excel(month: int, year: int) -> bytes:
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
+
+
+# ------------------------------------------------------------------
+# Custom Date Range Excel (Phase 5 — A2)
+# ------------------------------------------------------------------
+
+MAX_CUSTOM_RANGE_DAYS = 90
+
+
+def generate_custom_range_excel(start_date: date, end_date: date) -> bytes:
+    """Tạo Excel report cho khoảng ngày tùy chọn.
+
+    Cùng format với generate_monthly_excel() nhưng nhận date range.
+
+    Args:
+        start_date: Ngày bắt đầu.
+        end_date: Ngày kết thúc.
+
+    Returns:
+        bytes: Excel file content.
+
+    Raises:
+        ValueError: Nếu range > 90 ngày hoặc start > end.
+    """
+    if end_date < start_date:
+        raise ValueError("end_date phải >= start_date")
+
+    range_days = (end_date - start_date).days + 1
+    if range_days > MAX_CUSTOM_RANGE_DAYS:
+        raise ValueError(f"Max range is {MAX_CUSTOM_RANGE_DAYS} days")
+
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill
+
+    wb = Workbook()
+
+    # ── Sheet 1: Tổng hợp ──
+    ws_summary = wb.active
+    ws_summary.title = "Tổng hợp"
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+
+    headers = ["STT", "Họ tên", "Số ngày đi", "Muộn", "WFH", "Nghỉ phép", "Vắng"]
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws_summary.cell(row=1, column=col_idx, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+
+    # Dùng get_weekly_report_data với custom range
+    weekly_data = get_weekly_report_data(start_date, end_date)
+
+    row_idx = 2
+    for stt, (uid, stats) in enumerate(weekly_data["summary"].items(), 1):
+        ws_summary.cell(row=row_idx, column=1, value=stt)
+        ws_summary.cell(row=row_idx, column=2, value=stats["name"])
+        ws_summary.cell(row=row_idx, column=3, value=stats["present"])
+        ws_summary.cell(row=row_idx, column=4, value=stats["late"])
+        ws_summary.cell(row=row_idx, column=5, value=stats["wfh"])
+        ws_summary.cell(row=row_idx, column=6, value=stats["on_leave"])
+        ws_summary.cell(row=row_idx, column=7, value=stats["absent"])
+        row_idx += 1
+
+    ws_summary.column_dimensions["A"].width = 6
+    ws_summary.column_dimensions["B"].width = 25
+    for col_letter in ["C", "D", "E", "F", "G"]:
+        ws_summary.column_dimensions[col_letter].width = 12
+
+    # ── Sheet 2: Chi tiết ──
+    ws_detail = wb.create_sheet("Chi tiết")
+
+    detail_headers = ["Ngày", "Họ tên", "Giờ vào", "Giờ ra", "Phương thức", "Trạng thái"]
+    for col_idx, header in enumerate(detail_headers, 1):
+        cell = ws_detail.cell(row=1, column=col_idx, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+
+    detail_row = 2
+    current_date = start_date
+    tz = get_tz()
+
+    while current_date <= end_date:
+        if current_date.weekday() >= 5:
+            current_date += timedelta(days=1)
+            continue
+
+        start_iso, end_iso = _date_range(current_date)
+
+        checkins = db.select(
+            "checkins",
+            filters={
+                "type": "in",
+                "checked_at.gte": start_iso,
+                "checked_at.lt": end_iso,
+            },
+            order="checked_at.asc",
+        )
+
+        checkouts = db.select(
+            "checkins",
+            filters={
+                "type": "out",
+                "checked_at.gte": start_iso,
+                "checked_at.lt": end_iso,
+            },
+            order="checked_at.asc",
+        )
+        checkout_map = {co["user_id"]: co for co in checkouts}
+
+        all_users = db.select("users", filters={"is_active": True})
+        user_map = {u["id"]: u for u in all_users}
+
+        checked_user_ids = set()
+        for ci in checkins:
+            uid = ci["user_id"]
+            if uid in checked_user_ids:
+                continue
+            checked_user_ids.add(uid)
+
+            user = user_map.get(uid)
+            if not user:
+                continue
+
+            time_in = _format_checkin_time(ci["checked_at"])
+            co = checkout_map.get(uid)
+            time_out = _format_checkin_time(co["checked_at"]) if co else "—"
+            method = ci.get("method", "")
+            status = "Muộn" if _is_late(ci["checked_at"]) else "Đúng giờ"
+
+            ws_detail.cell(row=detail_row, column=1, value=current_date.strftime("%d/%m"))
+            ws_detail.cell(row=detail_row, column=2, value=user["full_name"])
+            ws_detail.cell(row=detail_row, column=3, value=time_in)
+            ws_detail.cell(row=detail_row, column=4, value=time_out)
+            ws_detail.cell(row=detail_row, column=5, value=method)
+            ws_detail.cell(row=detail_row, column=6, value=status)
+            detail_row += 1
+
+        current_date += timedelta(days=1)
+
+    ws_detail.column_dimensions["A"].width = 10
+    ws_detail.column_dimensions["B"].width = 25
+    for col_letter in ["C", "D", "E", "F"]:
+        ws_detail.column_dimensions[col_letter].width = 14
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()

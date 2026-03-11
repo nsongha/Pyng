@@ -7,7 +7,12 @@ import type {
   MeResponse,
   CheckinsResponse,
   LeaderboardResponse,
+  ChartDataResponse,
+  OvertimeResponse,
   ApiError,
+  MyLeavesResponse,
+  LeaveFormData,
+  SubmitLeaveResponse,
 } from '../types';
 
 /** Base URL — cùng domain trên Vercel */
@@ -106,4 +111,62 @@ export function fetchLeaderboard(
     `/leaderboard?period=${period}`,
     initData,
   );
+}
+
+/* ============================================
+   Chart & Overtime API (Stream B)
+   ============================================ */
+
+/**
+ * GET /api/checkins/chart — Chart data cho tháng
+ */
+export function fetchChartData(
+  initData: string,
+  month: string,
+): Promise<ChartDataResponse> {
+  return apiFetch<ChartDataResponse>(
+    `/checkins/chart?month=${month}`,
+    initData,
+  );
+}
+
+/**
+ * GET /api/overtime — Overtime data cho tháng
+ */
+export function fetchOvertime(
+  initData: string,
+  month: string,
+): Promise<OvertimeResponse> {
+  return apiFetch<OvertimeResponse>(
+    `/overtime?month=${month}`,
+    initData,
+  );
+}
+
+/* ============================================
+   Leave Management API (Stream C)
+   ============================================ */
+
+/**
+ * GET /api/leave/my — Lấy danh sách đơn nghỉ + balance
+ */
+export function fetchMyLeaves(
+  initData: string,
+  year?: number,
+): Promise<MyLeavesResponse> {
+  const params = year ? `?year=${year}` : '';
+  return apiFetch<MyLeavesResponse>(`/leave/my${params}`, initData);
+}
+
+/**
+ * POST /api/leave/request — Tạo đơn xin nghỉ mới
+ */
+export function submitLeaveRequest(
+  initData: string,
+  data: LeaveFormData,
+): Promise<SubmitLeaveResponse> {
+  return apiFetch<SubmitLeaveResponse>('/leave/request', initData, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }

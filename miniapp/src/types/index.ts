@@ -131,3 +131,125 @@ export const STREAK_MILESTONES: StreakMilestone[] = [
 export function getStreakMilestone(days: number): StreakMilestone | null {
   return STREAK_MILESTONES.find(m => days >= m.min_days) ?? null;
 }
+
+/* ============================================
+   Chart Data Types (Phase 5 — Stream B)
+   Matches /api/checkins/chart response
+   ============================================ */
+
+/** Single day entry for working hours chart */
+export interface DailyHour {
+  date: string;
+  hours: number;
+  is_late: boolean;
+  method: CheckinRecord['method'] | null;
+  mood: CheckinRecord['mood'] | null;
+}
+
+/** Chart summary stats */
+export interface ChartSummary {
+  avg_hours: number;
+  total_days: number;
+  ontime_rate: number;
+  most_used_method: CheckinRecord['method'] | null;
+}
+
+/** Month-over-month trend */
+export interface ChartTrend {
+  prev_month_avg: number;
+  current_avg: number;
+  change_percent: number;
+}
+
+/** GET /api/checkins/chart response */
+export interface ChartDataResponse {
+  ok: boolean;
+  month: string;
+  daily_hours: DailyHour[];
+  summary: ChartSummary;
+  trend: ChartTrend;
+}
+
+/* ============================================
+   Overtime Types (Phase 5 — Stream B)
+   Matches /api/overtime response
+   ============================================ */
+
+/** Single overtime session */
+export interface OvertimeSession {
+  date: string;
+  minutes: number;
+  checkout_time: string;
+}
+
+/** GET /api/overtime response */
+export interface OvertimeResponse {
+  ok: boolean;
+  month: string;
+  total_minutes: number;
+  total_days: number;
+  sessions: OvertimeSession[];
+}
+
+
+/* ============================================
+   Leave Management Types (Stream C)
+   ============================================ */
+
+/** Leave type options */
+export type LeaveType = 'annual' | 'sick' | 'compensatory' | 'unpaid';
+
+/** Leave request status */
+export type LeaveStatus = 'pending' | 'approved' | 'rejected';
+
+/** Single leave request record (from API) */
+export interface LeaveRequest {
+  id: number;
+  user_id: number;
+  leave_type: LeaveType;
+  start_date: string;
+  end_date: string;
+  days_count: number;
+  reason: string | null;
+  status: LeaveStatus;
+  approved_by: number | null;
+  requested_at: string;
+  processed_at: string | null;
+}
+
+/** Form submission data for POST /api/leave/request */
+export interface LeaveFormData {
+  leave_type: LeaveType;
+  start_date: string;
+  end_date: string;
+  reason?: string;
+}
+
+/** GET /api/leave/my response */
+export interface MyLeavesResponse {
+  ok: boolean;
+  year: number;
+  leaves: LeaveRequest[];
+  balance: LeaveBalance;
+}
+
+/** POST /api/leave/request response */
+export interface SubmitLeaveResponse {
+  ok: boolean;
+  leave: LeaveRequest;
+}
+
+/** Leave type display config */
+export const LEAVE_TYPE_LABELS: Record<LeaveType, { label: string; emoji: string; color: string }> = {
+  annual: { label: 'Phép năm', emoji: '🏖️', color: 'text-blue-500' },
+  sick: { label: 'Nghỉ ốm', emoji: '🏥', color: 'text-red-500' },
+  compensatory: { label: 'Nghỉ bù', emoji: '🔄', color: 'text-purple-500' },
+  unpaid: { label: 'Không lương', emoji: '💼', color: 'text-gray-500' },
+};
+
+/** Leave status display config */
+export const LEAVE_STATUS_LABELS: Record<LeaveStatus, { label: string; emoji: string; color: string; bgColor: string }> = {
+  pending: { label: 'Chờ duyệt', emoji: '🟡', color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
+  approved: { label: 'Đã duyệt', emoji: '✅', color: 'text-green-600', bgColor: 'bg-green-50' },
+  rejected: { label: 'Từ chối', emoji: '❌', color: 'text-red-600', bgColor: 'bg-red-50' },
+};

@@ -325,22 +325,24 @@ Report:
 
 ---
 
-## 🟡 Tech Debt (Phase 4 Code Review)
+## ✅ Tech Debt Resolved (Phase 5)
 
 ### TD-001: N+1 query trong leaderboard API
 
 **Severity**: Low (P2)
+**Status**: ✅ Resolved (2026-03-11)
 **Affects**: API `/api/leaderboard`
-**File**: `api/leaderboard.py` L37-43
+**File**: `api/leaderboard.py`
 
 **Mô tả**: `_enrich_leaderboard_with_names()` gọi `db.select("users")` per entry (N queries cho N users).
-Bot handler `gamification.py` đã làm đúng batch pattern — copy pattern đó sang API.
+**Fix**: Batch query 1 lần → build `name_map` → enrich. Copy pattern từ `bot/handlers/gamification.py`.
 
 ### TD-002: CORS wildcard cho Mini App API
 
 **Severity**: Low (P2)
+**Status**: ✅ Resolved (2026-03-11)
 **Affects**: Mini App API
-**File**: `services/auth_service.py` L189
+**File**: `services/auth_service.py`
 
-**Mô tả**: `Access-Control-Allow-Origin: *` — OK cho internal nhưng nên restrict tới `MINI_APP_URL` trong production.
+**Mô tả**: `Access-Control-Allow-Origin: *` → thay bằng `_get_cors_origin()` dùng `MINI_APP_URL` env var, fallback `*` cho dev.
 
