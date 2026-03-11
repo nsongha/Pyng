@@ -52,6 +52,7 @@ TC-{module}-{số}: {Mô tả scenario}
 
 ### 3. Tạo regression test cases
 
+- Tham khảo **checklist go-live** trong `docs/KNOWN_ISSUES.md` (cuối file) làm base
 - Liệt kê features CŨ có thể bị ảnh hưởng bởi code mới
 - Tạo 1-2 regression TCs cho mỗi feature cũ bị ảnh hưởng
 - Format: `TC-REG-{số}: {feature cũ} vẫn hoạt động sau khi {thay đổi mới}`
@@ -109,7 +110,8 @@ Với mỗi TC:
 ### 4. Regression check
 
 - Chạy regression TCs (nếu có trong plan)
-- Nếu KHÔNG có plan → verify import + basic logic của modules KHÔNG thay đổi nhưng bị depend
+- Nếu KHÔNG có plan → dùng **checklist go-live** trong `docs/KNOWN_ISSUES.md` làm reference
+- Verify import + basic logic của modules KHÔNG thay đổi nhưng bị depend
 
 ### 5. Output: `docs/QC_REPORT.md`
 

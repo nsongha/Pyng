@@ -245,9 +245,11 @@ Tất cả streams Phase [X] đã xong. Chạy bước 6-7 của /parallel-phase
 ## 7. Finalize
 
 1. **Gộp changelog** — nhiều stream entries → 1 version entry
-2. **Update docs** — `PROJECT_CONTEXT.md`, `DEV_ROADMAP.md`
-3. **Commit** — 1 commit gọn: `docs: ...`
-4. **Chạy `/task-completion`** cho commit code (nếu chưa commit từng stream)
+2. **Version bump** — update version trong `docs/PROJECT_CONTEXT.md` (section 11)
+3. **Update docs** — `PROJECT_CONTEXT.md`, `DEV_ROADMAP.md`
+4. **Commit** — 1 commit gọn: `docs: ...`
+5. **Tag git** (nếu significant release): `git tag v0.X.0 && git push --tags`
+6. **Chạy `/task-completion`** cho commit code (nếu chưa commit từng stream)
 
 ## LƯU Ý QUAN TRỌNG
 

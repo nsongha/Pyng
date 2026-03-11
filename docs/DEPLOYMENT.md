@@ -1,4 +1,5 @@
 # DEPLOYMENT.md — Hướng dẫn Deploy
+
 **Stack**: Vercel (Bot + Mini App) + Supabase (DB) + GitHub Actions (Cron)  
 **Chi phí**: $0/tháng
 
@@ -7,6 +8,7 @@
 ## 1. Chuẩn bị trước khi deploy
 
 ### 1.1 Tạo Telegram Bot
+
 ```
 1. Mở Telegram, tìm @BotFather
 2. Gửi /newbot
@@ -16,6 +18,7 @@
 ```
 
 ### 1.2 Supabase — bạn đã có account
+
 ```
 1. Tạo project mới: "pyng"
 2. Region: Southeast Asia (Singapore) — gần Hà Nội nhất
@@ -26,6 +29,7 @@
 ```
 
 ### 1.3 GitHub Repository
+
 ```bash
 # Tạo repo, push code lên
 git init
@@ -40,6 +44,7 @@ git push -u origin main
 Bot chạy dưới dạng **Serverless Functions** — mỗi request là một function invocation.
 
 ### 2.1 Cấu trúc thư mục Vercel
+
 ```
 /
 ├── api/
@@ -59,6 +64,7 @@ Bot chạy dưới dạng **Serverless Functions** — mỗi request là một f
 ```
 
 ### 2.2 `vercel.json`
+
 ```json
 {
   "functions": {
@@ -68,13 +74,14 @@ Bot chạy dưới dạng **Serverless Functions** — mỗi request là một f
   },
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/qr",       "dest": "/qr/index.html" },
-    { "src": "/(.*)",     "dest": "/miniapp/$1" }
+    { "src": "/qr", "dest": "/qr/index.html" },
+    { "src": "/(.*)", "dest": "/miniapp/$1" }
   ]
 }
 ```
 
 ### 2.3 Deploy lên Vercel
+
 ```bash
 # Cài Vercel CLI (bạn đã quen)
 npm install -g vercel
@@ -89,6 +96,7 @@ vercel --prod
 Hoặc connect GitHub → Vercel tự deploy khi push `main`.
 
 ### 2.4 Thêm Environment Variables trên Vercel Dashboard
+
 ```
 Vercel Dashboard → Project → Settings → Environment Variables
 → Add từng biến từ .env.example (xem TECH_STACK.md)
@@ -102,6 +110,7 @@ Quan trọng nhất:
 ```
 
 ### 2.5 Set Webhook Telegram
+
 ```bash
 # Sau khi có Vercel URL, set webhook
 curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
@@ -124,13 +133,14 @@ curl "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo"
 Tạo các file trong `.github/workflows/`:
 
 ### 3.1 Nhắc check-in buổi sáng — 8:30 AM (T2–T6)
+
 ```yaml
 # .github/workflows/remind_morning.yml
 name: Morning Check-in Reminder
 
 on:
   schedule:
-    - cron: '30 1 * * 1-5'   # 8:30 AM ICT = 01:30 UTC
+    - cron: "30 1 * * 1-5" # 8:30 AM ICT = 01:30 UTC
 
 jobs:
   remind:
@@ -144,13 +154,14 @@ jobs:
 ```
 
 ### 3.2 Nhắc check-out buổi chiều — 17:45 PM (T2–T6)
+
 ```yaml
 # .github/workflows/remind_evening.yml
 name: Evening Check-out Reminder
 
 on:
   schedule:
-    - cron: '45 10 * * 1-5'  # 17:45 ICT = 10:45 UTC
+    - cron: "45 10 * * 1-5" # 17:45 ICT = 10:45 UTC
 
 jobs:
   remind:
@@ -163,13 +174,14 @@ jobs:
 ```
 
 ### 3.3 Báo cáo hàng ngày — 9:15 AM (T2–T6)
+
 ```yaml
 # .github/workflows/daily_report.yml
 name: Daily Attendance Report
 
 on:
   schedule:
-    - cron: '15 2 * * 1-5'   # 9:15 AM ICT = 02:15 UTC
+    - cron: "15 2 * * 1-5" # 9:15 AM ICT = 02:15 UTC
 
 jobs:
   report:
@@ -182,6 +194,7 @@ jobs:
 ```
 
 ### 3.4 Refresh QR Token — Mỗi phút trong giờ làm việc
+
 ```yaml
 # .github/workflows/qr_refresh.yml
 name: QR Token Refresh
@@ -190,7 +203,7 @@ on:
   schedule:
     # Mỗi phút từ 8:00–18:00 ICT (1:00–11:00 UTC) — T2-T6
     # GitHub Actions tối thiểu mỗi 5 phút, dùng kết hợp với QR expire 5 phút
-    - cron: '*/5 1-11 * * 1-5'
+    - cron: "*/5 1-11 * * 1-5"
 
 jobs:
   refresh:
@@ -207,13 +220,14 @@ jobs:
 > dùng client-side generation (xem TECH_STACK.md §6).
 
 ### 3.5 Auto check-out — 23:59 hàng ngày
+
 ```yaml
 # .github/workflows/auto_checkout.yml
 name: Auto Checkout
 
 on:
   schedule:
-    - cron: '59 16 * * 1-5'  # 23:59 ICT = 16:59 UTC
+    - cron: "59 16 * * 1-5" # 23:59 ICT = 16:59 UTC
 
 jobs:
   checkout:
@@ -226,6 +240,7 @@ jobs:
 ```
 
 ### 3.6 Thêm CRON_SECRET vào GitHub Secrets
+
 ```
 GitHub Repo → Settings → Secrets and variables → Actions
 → New repository secret
@@ -284,6 +299,7 @@ vercel --prod
 ```
 
 ### Đăng ký Menu Button với BotFather
+
 ```
 /mybots → @PyngBot → Bot Settings → Menu Button
 → Edit URL: https://pyng.vercel.app
@@ -354,7 +370,9 @@ POST-LAUNCH (tuần 1):
 
 ---
 
-## 9. Monitoring & Logs
+## 9. Monitoring & Health Check
+
+### 9.1 Logs
 
 ```bash
 # Vercel Function logs (real-time)
@@ -366,21 +384,143 @@ vercel logs --follow
 curl "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo"
 
 # GitHub Actions: xem tại
-# github.com/bsmlabs/checkin-bot/actions
+# github.com/nsongha/Pyng/actions
 ```
+
+### 9.2 Uptime Monitoring (Free)
+
+Dùng [UptimeRobot](https://uptimerobot.com) (free 50 monitors):
+
+```
+1. Tạo account UptimeRobot
+2. Add monitor:
+   - Type: HTTP(s)
+   - URL: https://pyng.vercel.app/api/webhook
+   - Interval: 5 phút
+   - Alert: Email khi down
+3. Optional: thêm monitor cho Supabase health
+   - URL: https://<supabase-project>.supabase.co/rest/v1/
+   - Header: apikey=<anon_key>
+```
+
+### 9.3 Monitoring Checklist (hàng tuần)
+
+```
+□ Vercel Dashboard: function errors = 0?
+□ GitHub Actions: tất cả cron runs xanh?
+□ Supabase Dashboard: database size < 400MB? (free tier = 500MB)
+□ getWebhookInfo: last_error_message trống?
+□ UptimeRobot: uptime > 99%?
+```
+
+### 9.4 Alert Channels
+
+| Alert type                 | Kênh                         |
+| -------------------------- | ---------------------------- |
+| Bot down                   | UptimeRobot → Email          |
+| Cron fail                  | GitHub Actions email → admin |
+| Supabase approaching limit | Supabase Dashboard email     |
+| Deploy fail                | Vercel email notification    |
 
 ---
 
-## 10. Update & Rollback
+## 10. Incident Response & Rollback
+
+### 10.1 Khi phát hiện bot không phản hồi
+
+```
+1. Verify: curl "https://api.telegram.org/bot${TOKEN}/getWebhookInfo"
+   → Nếu last_error_message có lỗi → xem bước 2
+   → Nếu URL sai/trống → set lại webhook (mục 2.5)
+
+2. Check Vercel logs:
+   vercel logs --follow
+   → Nếu có lỗi import/syntax → rollback (bước 10.2)
+   → Nếu timeout → check Supabase (bước 3)
+
+3. Check Supabase status:
+   → Dashboard → Project paused? → Resume project
+   → Database đầy? → Cleanup old records
+
+4. Check env vars:
+   → Vercel Dashboard → Settings → Environment Variables
+   → Tất cả vars vẫn đúng? Token chưa bị revoke?
+```
+
+### 10.2 Rollback Vercel deployment
 
 ```bash
-# Deploy phiên bản mới — chỉ cần push
-git push origin main   # Vercel tự deploy
+# Cách 1: CLI
+vercel rollback
 
-# Rollback về deployment trước
-# Vercel Dashboard → Deployments → chọn version cũ → Promote to Production
+# Cách 2: Dashboard
+# Vercel Dashboard → Deployments → chọn version OK → "..." → Promote to Production
 
-# Database migration
-# Chạy SQL mới trực tiếp trên Supabase SQL Editor
-# (Alembic vẫn dùng được nếu run local với DATABASE_URL)
+# Cách 3: Git revert
+git revert HEAD
+git push origin main    # Vercel auto deploy
 ```
+
+### 10.3 Recovery database
+
+```bash
+# Nếu có backup (xem mục 11)
+# Restore từ SQL dump
+psql $DATABASE_URL < backup_YYYYMMDD.sql
+
+# Nếu chạy nhầm migration
+# Revert thủ công: viết reverse SQL trên Supabase SQL Editor
+```
+
+### 10.4 Common failures & fixes
+
+| Triệu chứng                 | Nguyên nhân thường gặp             | Fix                                      |
+| --------------------------- | ---------------------------------- | ---------------------------------------- |
+| Bot im lặng                 | Webhook URL sai hoặc Vercel down   | Set lại webhook, check Vercel status     |
+| "Internal Server Error" 500 | Import error, env var thiếu        | Check logs, rollback, verify env vars    |
+| Cron không chạy             | GitHub Actions disabled / paused   | Repo → Actions → Enable, re-run manually |
+| QR page trắng               | Supabase paused hoặc API key sai   | Resume project, check SUPABASE_URL       |
+| Check-in fail "DB error"    | Supabase free tier paused (7 ngày) | Resume project, setup keepalive ping     |
+
+---
+
+## 11. Database Backup & Recovery
+
+> ⚠️ Supabase free tier **KHÔNG có** point-in-time recovery.
+> Nếu data bị mất/corruption → chỉ recover được từ manual backup.
+
+### 11.1 Manual backup (chạy định kỳ)
+
+```bash
+# Cần Supabase CLI và DATABASE_URL
+# Dump toàn bộ schema + data
+supabase db dump --data-only -f backup_$(date +%Y%m%d).sql
+
+# Hoặc dùng pg_dump nếu có DATABASE_URL
+pg_dump $DATABASE_URL > backup_$(date +%Y%m%d).sql
+```
+
+### 11.2 Backup schedule
+
+| Tần suất        | Nội dung    | Lưu ở đâu                  |
+| --------------- | ----------- | -------------------------- |
+| Hàng tuần       | Full dump   | Local hoặc Google Drive    |
+| Trước deploy    | Schema only | Commit vào repo (nếu khác) |
+| Trước migration | Full dump   | Local, giữ 30 ngày         |
+
+### 11.3 Recovery steps
+
+```
+1. Lấy file backup gần nhất
+2. Supabase SQL Editor → paste nội dung backup
+3. Hoặc: psql $DATABASE_URL < backup_YYYYMMDD.sql
+4. Verify: query users, checkins → data đúng
+5. Test bot: gửi /start → bot phản hồi đúng
+```
+
+### 11.4 Lưu ý quan trọng
+
+- **LUÔN backup TRƯỚC KHI chạy migration mới**
+- Free tier giới hạn 500MB — monitor trên Supabase Dashboard
+- Giữ ít nhất 4 bản backup gần nhất (1 tháng)
+- Khi upgrade Pro ($25/tháng): bật point-in-time recovery tự động

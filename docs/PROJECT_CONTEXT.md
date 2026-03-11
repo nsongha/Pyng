@@ -256,3 +256,19 @@ GitHub Actions (Cron)
 - \+ TECH_STACK.md: ~+420 lines
 - \+ ARCHITECTURE.md: ~+340 lines
 - Ngưỡng cảnh báo: > 300 lines tổng → cân nhắc trim context
+
+## 15. Reading Order / Onboarding
+
+> Dành cho dev mới hoặc AI agent mới vào project. Đọc theo thứ tự ưu tiên.
+
+**Tier 1 — Bắt buộc** (hiểu project):
+
+1. `PROJECT_CONTEXT.md` ← file này
+2. `DEV_ROADMAP.md` — biết đang ở phase nào
+3. `ARCHITECTURE.md` — hiểu cấu trúc code + DB schema
+
+**Tier 2 — Khi bắt đầu code**: 4. `BOT_FLOWS.md` — toàn bộ conversation flows 5. `KNOWN_ISSUES.md` — bugs đã biết + checklist go-live 6. `DECISIONS.md` — tại sao chọn tech/approach hiện tại
+
+**Tier 3 — Khi deploy/ops**: 7. `DEPLOYMENT.md` — setup, monitoring, incident response, backup 8. `TECH_STACK.md` — dependencies, versions, config
+
+**Tier 4 — Quy trình** (`.agents/`): 9. `workflows/` — `/parallel-phase`, `/new-feature`, `/task-completion`, `/qc`, `/code-review` 10. `templates/rules/` — coding conventions, security, error handling
