@@ -4,6 +4,8 @@
     "PYTHONPATH": "."
   },
   "rewrites": [
+    { "source": "/api/checkins/:path*", "destination": "/api/checkins" },
+    { "source": "/api/leave/:path*", "destination": "/api/leave" },
     { "source": "/qr(.*)", "destination": "/qr/index.html" },
     { "source": "/miniapp/(.*)", "destination": "/miniapp/dist/index.html" },
     { "source": "/miniapp", "destination": "/miniapp/dist/index.html" }
