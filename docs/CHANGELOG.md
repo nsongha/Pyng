@@ -113,6 +113,12 @@
 
 ### fix
 
+- **Phase 6 — Stream A: Fix API & Auth** (Wave 1):
+  - `api/me.py` — Fix field names match TS types (`total→total_days`, `late→late_days`, `wfh→wfh_days`). Thêm `leave_days`, `ontime_percentage`. Handle `get_user_stats()` exception
+  - `api/checkins.py` — Thêm error handling chi tiết (log telegram_id + month), trả `{ok: false, error}` nhất quán
+  - `api/leave.py` — Validate year range (2020-2100), thêm `ok` field trong error responses, log context chi tiết
+  - `services/auth_service.py` — `validate_telegram_init_data()` trả `tuple[bool, str]` thay vì `bool`. Auth errors phân biệt: Missing header / Invalid signature / Token expired
+
 - **Miniapp 404**: Fix deployment — Vercel không build miniapp do `.vercelignore` exclude `index.html`
   - Thêm `installCommand` + `buildCommand` vào `vercel.json`
   - Set `outputDirectory: "."` cho Python serverless + static miniapp

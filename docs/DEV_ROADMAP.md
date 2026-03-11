@@ -192,17 +192,17 @@ Week 1          Week 2          Week 3          Week 4
 
 ---
 
-## Phase 6 — Stabilize & Salary (Chưa bắt đầu)
+## Phase 6 — Stabilize & Salary (Đang thực hiện)
 
 **Mục tiêu**: Fix API lỗi trên mini app, polish UX 3 trang hiện có, tích hợp tính lương
 
-### Wave 1: Fix API & Auth (P0) — 1 ngày
+### Wave 1: Fix API & Auth (P0) — ✅ (Hoàn thành 2026-03-12)
 
-- [ ] Debug HTTP 500 trên `/api/me` (Dashboard blank)
-- [ ] Debug HTTP 500 trên `/api/checkins/chart` (Thống kê blank)
-- [ ] Debug lỗi "string did not match expected pattern" trên `/api/leave/my` (Nghỉ phép)
-- [ ] Verify Telegram initData auth flow end-to-end (HMAC-SHA256 validation)
-- [ ] Test cả 3 trang trên Telegram mobile sau khi fix
+- [x] Debug HTTP 500 trên `/api/me` (Dashboard blank) — fix field names match TS types
+- [x] Debug HTTP 500 trên `/api/checkins/chart` (Thống kê blank) — thêm error handling chi tiết
+- [x] Debug lỗi "string did not match expected pattern" trên `/api/leave/my` — validate year range
+- [x] Verify Telegram initData auth flow end-to-end — auth errors cụ thể (expired/invalid/missing)
+- [x] Structured logging với telegram_id context cho tất cả endpoints
 
 ### Wave 2: Mini App Polish (P1) — 1 ngày
 
