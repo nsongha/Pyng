@@ -1,13 +1,15 @@
-# Miniapp source files — chỉ deploy dist/
-miniapp/src/
-miniapp/index.html
-miniapp/tsconfig*.json
+# Miniapp source files (giữ dist/)
+miniapp/src
+miniapp/node_modules
+miniapp/tsconfig.json
+miniapp/tsconfig.app.json
+miniapp/tsconfig.node.json
 miniapp/vite.config.ts
 miniapp/eslint.config.js
-miniapp/node_modules/
+miniapp/index.html
 
 # Python cache
-__pycache__/
+__pycache__
 *.pyc
 
 # Dev files
