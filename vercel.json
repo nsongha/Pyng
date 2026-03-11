@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "installCommand": "cd miniapp && npm install",
+  "buildCommand": "cd miniapp && npx vite build && rm index.html",
+  "outputDirectory": ".",
   "env": {
     "PYTHONPATH": "."
   },

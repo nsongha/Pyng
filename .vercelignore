@@ -1,2 +1,2 @@
-# Exclude miniapp source index.html (dev file) — để Vercel serve dist/index.html qua rewrites
-miniapp/index.html
+# Vercel sẽ build miniapp via buildCommand — rewrites serve dist/index.html
+
