@@ -135,11 +135,11 @@ Week 1          Week 2          Week 3          Week 4
 
 ### Ngày 22–24: Gamification
 
-- [ ] Hệ thống điểm (xem GAMIFICATION_DESIGN.md)
-- [ ] Streak tracking
-- [ ] Leaderboard hàng tháng
-- [ ] Mood tracking sau check-in
-- [ ] Mood dashboard cho manager
+- [x] Hệ thống điểm (xem GAMIFICATION_DESIGN.md)
+- [x] Streak tracking
+- [x] Leaderboard hàng tháng
+- [x] Mood tracking sau check-in
+- [x] Mood dashboard cho manager
 
 ### Ngày 25–26: Mini App
 

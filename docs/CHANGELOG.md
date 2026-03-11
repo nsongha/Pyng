@@ -9,6 +9,11 @@
 
 ### feat
 
+- **Phase 4 — Gamification Services** (Stream A, Wave 1):
+  - `services/gamification_service.py` — Hệ thống điểm, streak, leaderboard, milestones (8 functions)
+  - `services/mood_service.py` — Mood tracking, burnout detection, mood stats (4 functions)
+  - `services/checkin_service.py` — Thêm `mood` param + `process_gamification_after_checkin()` orchestrator
+
 - **Phase 3 — Services Foundation** (Stream A, Wave 1):
   - `services/config_service.py` — CRUD system_config (get/set upsert, get_all)
   - `services/leave_service.py` — Leave request CRUD + business logic (auto business days, trừ phép khi approve, remaining days)
