@@ -140,11 +140,11 @@ CREATE TABLE system_config (
 
 | #   | Task                                  | Status | Priority | Dependencies | Files affected                      |
 | --- | ------------------------------------- | ------ | -------- | ------------ | ----------------------------------- |
-| B1  | Admin Panel menu chính (/admin)       | 📋     | P0       | A2, A5       | `bot/handlers/admin_panel.py` [NEW] |
-| B2  | Quản lý nhân viên (list, edit, deact) | 📋     | P0       | A5, B1       | `bot/handlers/admin_panel.py`       |
-| B3  | Cài đặt hệ thống (giờ làm, toggle)    | 📋     | P1       | A2, B1       | `bot/handlers/admin_panel.py`       |
-| B4  | Xem lịch sử check-in cá nhân          | 📋     | P1       | B1           | `bot/handlers/admin_panel.py`       |
-| B5  | Register admin panel handlers         | 📋     | P0       | B1-B4        | `bot/app.py`                        |
+| B1  | Admin Panel menu chính (/admin)       | ✅     | P0       | A2, A5       | `bot/handlers/admin_panel.py` [NEW] |
+| B2  | Quản lý nhân viên (list, edit, deact) | ✅     | P0       | A5, B1       | `bot/handlers/admin_panel.py`       |
+| B3  | Cài đặt hệ thống (giờ làm, toggle)    | ✅     | P1       | A2, B1       | `bot/handlers/admin_panel.py`       |
+| B4  | Xem lịch sử check-in cá nhân          | ✅     | P1       | B1           | `bot/handlers/admin_panel.py`       |
+| B5  | Register admin panel handlers         | ✅     | P0       | B1-B4        | `bot/app.py`                        |
 
 **Acceptance Criteria:**
 
@@ -165,10 +165,10 @@ CREATE TABLE system_config (
 
 | #   | Task                                  | Status | Priority | Dependencies | Files affected                |
 | --- | ------------------------------------- | ------ | -------- | ------------ | ----------------------------- |
-| C1  | Leave request flow (/leave, /xinnghỉ) | 📋     | P0       | A3           | `bot/handlers/leave.py` [NEW] |
-| C2  | Manager/Admin approve/reject leave    | 📋     | P0       | A3, C1       | `bot/handlers/leave.py`       |
-| C3  | Xem số ngày phép còn lại (/phep)      | 📋     | P1       | A3           | `bot/handlers/leave.py`       |
-| C4  | Register leave handlers               | 📋     | P0       | C1-C3        | `bot/app.py`                  |
+| C1  | Leave request flow (/leave, /xinnghỉ) | ✅     | P0       | A3           | `bot/handlers/leave.py` [NEW] |
+| C2  | Manager/Admin approve/reject leave    | ✅     | P0       | A3, C1       | `bot/handlers/leave.py`       |
+| C3  | Xem số ngày phép còn lại (/phep)      | ✅     | P1       | A3           | `bot/handlers/leave.py`       |
+| C4  | Register leave handlers               | ✅     | P0       | C1-C3        | `bot/app.py`                  |
 
 **Acceptance Criteria:**
 
@@ -186,10 +186,10 @@ CREATE TABLE system_config (
 
 | #   | Task                                     | Status | Priority | Dependencies | Files affected                                       |
 | --- | ---------------------------------------- | ------ | -------- | ------------ | ---------------------------------------------------- |
-| D1  | Daily report cron endpoint               | 📋     | P0       | A4           | `api/cron/daily_report.py` [NEW]                     |
-| D2  | Report bot commands (/report)            | 📋     | P0       | A4           | `bot/handlers/report.py` [NEW]                       |
-| D3  | Weekly/Monthly Excel export              | 📋     | P1       | A4, A1       | `bot/handlers/report.py`                             |
-| D4  | Register report handlers + cron schedule | 📋     | P0       | D1-D3        | `bot/app.py`, `.github/workflows/cron-reminders.yml` |
+| D1  | Daily report cron endpoint               | ✅     | P0       | A4           | `api/cron/daily_report.py` [NEW]                     |
+| D2  | Report bot commands (/report)            | ✅     | P0       | A4           | `bot/handlers/report.py` [NEW]                       |
+| D3  | Weekly/Monthly Excel export              | ✅     | P1       | A4, A1       | `bot/handlers/report.py`                             |
+| D4  | Register report handlers + cron schedule | ✅     | P0       | D1-D3        | `bot/app.py`, `.github/workflows/cron-reminders.yml` |
 
 **Acceptance Criteria:**
 
@@ -248,13 +248,13 @@ CREATE TABLE system_config (
 
 ## Progress Summary
 
-| Stream          | Total  | Done  | Remaining | %      |
-| --------------- | ------ | ----- | --------- | ------ |
-| 🛠️ A (Services) | 5      | 5     | 0         | 100%   |
-| 👑 B (Admin)    | 5      | 0     | 5         | 0%     |
-| 📋 C (Leave)    | 4      | 0     | 4         | 0%     |
-| 📊 D (Report)   | 4      | 0     | 4         | 0%     |
-| **All**         | **18** | **5** | **13**    | **28%** |
+| Stream          | Total  | Done   | Remaining | %       |
+| --------------- | ------ | ------ | --------- | ------- |
+| 🛠️ A (Services) | 5      | 5      | 0         | 100%    |
+| 👑 B (Admin)    | 5      | 5      | 0         | 100%    |
+| 📋 C (Leave)    | 4      | 4      | 0         | 100%    |
+| 📊 D (Report)   | 4      | 4      | 0         | 100%    |
+| **All**         | **18** | **18** | **0**     | **100%** |
 
 ---
 

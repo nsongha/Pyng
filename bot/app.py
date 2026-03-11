@@ -17,6 +17,13 @@ from bot.handlers.admin import (
     get_admin_nfc_handler,
     get_manual_approval_handlers,
 )
+from bot.handlers.leave import (
+    get_leave_request_handler,
+    get_leave_approval_handlers,
+    get_leave_balance_handler,
+)
+from bot.handlers.admin_panel import get_admin_panel_handlers
+from bot.handlers.report import get_report_handlers
 
 
 def create_bot() -> Application:
@@ -56,6 +63,25 @@ def create_bot() -> Application:
 
     # Manual check-in approval inline buttons
     for handler in get_manual_approval_handlers():
+        app.add_handler(handler)
+
+    # 4. Admin Panel (/admin — Phase 3)
+    for handler in get_admin_panel_handlers():
+        app.add_handler(handler)
+
+    # 5. Leave management
+    # Leave request conversation (/leave, /xinnghỉ)
+    app.add_handler(get_leave_request_handler())
+
+    # Leave approval inline buttons
+    for handler in get_leave_approval_handlers():
+        app.add_handler(handler)
+
+    # Leave balance command (/phep)
+    app.add_handler(get_leave_balance_handler())
+
+    # 6. Report commands (/report, /baocao — Phase 3)
+    for handler in get_report_handlers():
         app.add_handler(handler)
 
     return app

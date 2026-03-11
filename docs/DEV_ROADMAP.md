@@ -93,7 +93,7 @@ Week 1          Week 2          Week 3          Week 4
 
 ---
 
-## Phase 3 — Admin & Report (Tuần 3)
+## Phase 3 — Admin & Report (Tuần 3) ✅ (Hoàn thành 2026-03-11)
 
 **Mục tiêu**: Admin có đủ công cụ quản lý, báo cáo tự động hoạt động
 
@@ -105,30 +105,27 @@ Week 1          Week 2          Week 3          Week 4
 - [x] User Service mở rộng — admin CRUD (get_all, update, deactivate, filter by role)
 - [x] Uncomment openpyxl dependency
 
-### Ngày 15–17: Admin Panel
+### Wave 2: Admin Panel + Leave ✅
 
-- [ ] Admin panel đầy đủ (inline keyboard navigation)
-- [ ] Quản lý nhân viên (thêm, xóa, sửa role)
-- [ ] Xem lịch sử cá nhân từng người
-- [ ] Cài đặt hệ thống (giờ làm, giờ nhắc, timezone)
-- [ ] Toggle bật/tắt từng phương thức check-in
+- [x] Admin panel đầy đủ (inline keyboard navigation /admin)
+- [x] Quản lý nhân viên (list, sửa role, deactivate)
+- [x] Xem lịch sử check-in cá nhân (30 ngày)
+- [x] Cài đặt hệ thống (giờ làm, quỹ muộn)
+- [x] Toggle bật/tắt từng phương thức check-in
+- [x] Xin nghỉ phép flow (/leave, /xinnghỉ)
+- [x] Admin duyệt/từ chối nghỉ phép
+- [x] Trừ ngày phép tự động (annual leave)
+- [x] Xem số ngày phép còn lại (/phep)
 
-### Ngày 18–19: Leave Management
+### Wave 3: Report ✅
 
-- [ ] Xin nghỉ phép flow
-- [ ] Manager duyệt
-- [ ] Trừ ngày phép tự động
-- [ ] Xem số ngày phép còn lại
+- [x] Daily report tự động (gửi admin group 9:15 AM)
+- [x] `/report today` — text nhanh
+- [x] `/report week` — tổng hợp tuần (text)
+- [x] `/report month` — tổng hợp tháng (text + Excel)
+- [ ] Export theo khoảng thời gian tùy chọn (dời sang Phase 5)
 
-### Ngày 20–21: Báo cáo
-
-- [ ] Daily report tự động (gửi group HR 9:30 AM)
-- [ ] `/report today` — text nhanh
-- [ ] Weekly report (Excel)
-- [ ] Monthly report (Excel đầy đủ)
-- [ ] Export theo khoảng thời gian tùy chọn
-
-**Done when**: Admin tự vận hành được, báo cáo tự động chạy đúng giờ
+**Done when**: ~~Admin tự vận hành được, báo cáo tự động chạy đúng giờ~~ ✅ Done
 
 ---
 

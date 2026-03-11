@@ -1,10 +1,11 @@
 # =============================================================
-# Pyng — Cron Reminders (Morning Check-in & Evening Check-out)
+# Pyng — Cron Reminders & Reports
 # =============================================================
 # Trigger: GitHub Actions cron schedule, weekdays only.
 #
-# Morning: 8:30 AM UTC+7 = 01:30 UTC → nhắc check-in
-# Evening: 17:45 PM UTC+7 = 10:45 UTC → nhắc check-out
+# Morning:      8:30 AM UTC+7 = 01:30 UTC → nhắc check-in
+# Daily Report: 9:15 AM UTC+7 = 02:15 UTC → báo cáo hàng ngày
+# Evening:      17:45 PM UTC+7 = 10:45 UTC → nhắc check-out
 #
 # Secrets cần set:
 #   CRON_SECRET  — token xác thực cron endpoint
@@ -17,6 +18,8 @@ on:
   schedule:
     # Morning reminder: 8:30 AM UTC+7 = 01:30 UTC, thứ 2-6
     - cron: "30 1 * * 1-5"
+    # Daily report: 9:15 AM UTC+7 = 02:15 UTC, thứ 2-6
+    - cron: "15 2 * * 1-5"
     # Evening reminder: 17:45 PM UTC+7 = 10:45 UTC, thứ 2-6
     - cron: "45 10 * * 1-5"
 
@@ -24,12 +27,13 @@ on:
   workflow_dispatch:
     inputs:
       reminder_type:
-        description: "Loại nhắc nhở (morning / evening)"
+        description: "Loại nhắc nhở (morning / daily_report / evening)"
         required: true
         default: "morning"
         type: choice
         options:
           - morning
+          - daily_report
           - evening
 
 jobs:
@@ -46,8 +50,11 @@ jobs:
           else
             # Xác định theo giờ UTC hiện tại
             HOUR=$(date -u +%H)
+            MINUTE=$(date -u +%M)
             if [ "$HOUR" = "01" ]; then
               echo "reminder=morning" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" = "02" ]; then
+              echo "reminder=daily_report" >> $GITHUB_OUTPUT
             else
               echo "reminder=evening" >> $GITHUB_OUTPUT
             fi

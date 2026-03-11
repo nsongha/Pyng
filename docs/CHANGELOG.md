@@ -16,6 +16,28 @@
   - `services/user_service.py` — Thêm get_all_users, update_user, deactivate_user, get_users_by_role
   - `requirements.txt` — Uncomment openpyxl==3.1.2
 
+- **Phase 3 — Admin Panel** (Stream B, Wave 2):
+  - `bot/handlers/admin_panel.py` — Admin Panel mới (tách riêng khỏi admin.py 730 lines)
+  - `/admin` command → menu inline: quản lý nhân viên, cài đặt hệ thống, toggle check-in methods
+  - Quản lý nhân viên: list phân trang, xem chi tiết, đổi role, vô hiệu hóa
+  - Cài đặt hệ thống: sửa giờ làm, quỹ muộn, toggle GPS/WiFi/QR/NFC/Manual → lưu system_config
+  - Lịch sử check-in: xem 30 ngày gần nhất từng nhân viên (giờ in/out, method, ontime/late)
+
+- **Phase 3 — Leave Management** (Stream C, Wave 2):
+  - `bot/handlers/leave.py` — Xin nghỉ phép (/leave, /xinnghỉ, /xinnghi)
+  - ConversationHandler: chọn loại → ngày bắt đầu → ngày kết thúc → lý do → xác nhận → gửi admin group
+  - Admin duyệt/từ chối inline buttons → notify user kết quả
+  - Trừ ngày phép tự động khi approve loại 'annual'
+  - `/phep` — Xem ngày phép còn lại + 5 đơn nghỉ gần nhất
+
+- **Phase 3 — Report System** (Stream D, Wave 3):
+  - `bot/handlers/report.py` — /report today|week|month, /baocao (alias)
+  - `/report today` — text summary nhanh (có mặt, vắng, WFH, muộn, nghỉ phép)
+  - `/report week` — bảng tổng hợp tuần (monospace text)
+  - `/report month` — bảng tổng hợp tháng + gửi Excel file
+  - `api/cron/daily_report.py` — Cron 9:15 AM gửi daily report vào admin group
+  - `.github/workflows/cron-reminders.yml` — Thêm schedule 02:15 UTC (9:15 AM UTC+7)
+
 - **Phase 2 — QR System** (Stream A):
   - `services/qr_service.py` — QR session CRUD, generate QR image (qrcode+Pillow), validate token, cleanup expired
   - `bot/handlers/qr_checkin.py` — QR check-in via deep link + manual input (/checkin_qr)
