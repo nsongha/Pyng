@@ -1,17 +1,2 @@
-# Miniapp source files (giữ dist/)
-miniapp/src
-miniapp/node_modules
-miniapp/tsconfig.json
-miniapp/tsconfig.app.json
-miniapp/tsconfig.node.json
-miniapp/vite.config.ts
-miniapp/eslint.config.js
+# Exclude miniapp source index.html (dev file) — để Vercel serve dist/index.html qua rewrites
 miniapp/index.html
-
-# Python cache
-__pycache__
-*.pyc
-
-# Dev files
-.env
-.env.local
