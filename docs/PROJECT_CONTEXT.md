@@ -2,7 +2,7 @@
 
 > ⚡ File này dùng để AI (hoặc dev mới) đọc nhanh toàn bộ dự án trong 2 phút.  
 > Để hiểu sâu hơn từng phần, đọc file tương ứng được link bên dưới.  
-> Cập nhật lần cuối: 2026-03-11
+> Cập nhật lần cuối: 2026-03-12
 
 ---
 

@@ -147,7 +147,7 @@ Week 1          Week 2          Week 3          Week 4
 - [x] Telegram WebApp SDK integration
 - [x] Dashboard: lịch sử check-in cá nhân
 - [x] Biểu đồ giờ làm việc tháng
-- [ ] Xin nghỉ qua Mini App (dời sang Phase 5)
+- [x] Xin nghỉ qua Mini App (**moved to Phase 5** → ✅)
 - [x] Deploy lên Vercel
 
 ### Ngày 27–28: Testing & Launch
@@ -162,7 +162,37 @@ Week 1          Week 2          Week 3          Week 4
 
 ---
 
-## Phase 5 — Enhancement (Tháng 2+)
+## Phase 5 — Enhancement ✅ (Hoàn thành 2026-03-12)
+
+**Mục tiêu**: Nâng cấp trải nghiệm — chart, leave form Mini App, overtime tracking, export mở rộng, fix tech debt
+
+**Tasks completed (21/21)**:
+
+- [x] Overtime Service: tracking + tính OT (30 phút grace, cap 4h/ngày)
+- [x] Report export theo khoảng ngày tùy chọn (max 90 ngày)
+- [x] Bot command: `/report YYYY-MM-DD YYYY-MM-DD` (custom date range Excel)
+- [x] Bulk approve manual check-in (inline button)
+- [x] API: GET `/api/checkins/chart` (chart data with trend)
+- [x] API: POST `/api/leave/request` (leave form + admin notification)
+- [x] API: GET `/api/leave/my` (leave list + balance)
+- [x] API: GET `/api/overtime` (monthly OT data)
+- [x] Mini App: React Router + Bottom Navigation (3 tabs)
+- [x] Mini App: Chart components (WorkingHoursChart + AttendanceDonut + recharts)
+- [x] Mini App: Charts page (month selector + stats + trend)
+- [x] Mini App: OvertimeCard + sparkline
+- [x] Mini App: Leave form (date picker + validation + haptic feedback)
+- [x] Mini App: Leave list (status badges + pull-to-refresh)
+- [x] Mini App: Leave page (tab toggle: list / form + balance card)
+- [x] Fix TD-001: N+1 query leaderboard (batch user names)
+- [x] Fix TD-002: CORS restriction (MINI_APP_URL fallback)
+- [x] QC test: compile + miniapp build + regression
+- [x] Code review: 0 P0, 1 P1 fixed (bulk approve register)
+
+**Done when**: ~~Charts + Leave form + Overtime + Export mở rộng hoạt động~~ ✅ Done
+
+---
+
+## Phase 6 — Advanced (Chưa bắt đầu)
 
 Sau khi ổn định, có thể bổ sung:
 
@@ -171,7 +201,6 @@ Sau khi ổn định, có thể bổ sung:
 | Face verification (Face++)    | Medium  | 3 ngày |
 | Google Calendar sync          | Low     | 2 ngày |
 | Slack/Notion integration      | Low     | 2 ngày |
-| Overtime tracking             | Medium  | 2 ngày |
 | Multi-office support nâng cao | Low     | 3 ngày |
 | Analytics dashboard nâng cao  | Low     | 3 ngày |
 | Tích hợp phần mềm lương       | High    | 1 tuần |

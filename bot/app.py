@@ -16,6 +16,7 @@ from bot.handlers.admin import (
     get_admin_qr_handler,
     get_admin_nfc_handler,
     get_manual_approval_handlers,
+    get_bulk_approve_handlers,
 )
 from bot.handlers.leave import (
     get_leave_request_handler,
@@ -66,6 +67,10 @@ def create_bot() -> Application:
 
     # Manual check-in approval inline buttons
     for handler in get_manual_approval_handlers():
+        app.add_handler(handler)
+
+    # Bulk approve manual check-ins (Phase 5)
+    for handler in get_bulk_approve_handlers():
         app.add_handler(handler)
 
     # 4. Admin Panel (/admin — Phase 3)
