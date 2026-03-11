@@ -40,11 +40,11 @@ Duyệt theo thứ tự ưu tiên (dừng ngay nếu có P0):
 ### P1 — Functionality & Correctness
 
 - [ ] Code giải quyết đúng vấn đề đặt ra
-- [ ] Edge cases: null, empty, boundary values
-- [ ] Error states có response/UI phù hợp
 - [ ] Không break backward compatibility
 - [ ] Type hints đầy đủ (Python typing)
 - [ ] Async/await dùng đúng (không block event loop)
+
+> Edge cases, error states, scenario verification → kiểm tra trong `/qc --run`
 
 ### P2 — Code Quality & Performance
 
@@ -59,6 +59,12 @@ Duyệt theo thứ tự ưu tiên (dừng ngay nếu có P0):
 - [ ] Commit message theo Conventional Commits
 - [ ] Docstrings cho functions phức tạp
 - [ ] docs/ updated (nếu command mới)
+
+## 3.5. QC Verification
+
+> Nếu chưa chạy `/qc --run` cho scope này → chạy TRƯỚC khi output report.
+> QC results sẽ được gộp vào Code Review Report section riêng.
+> Nếu scope chỉ là bug fix nhỏ → skip, không cần QC.
 
 ## 4. Output Report
 

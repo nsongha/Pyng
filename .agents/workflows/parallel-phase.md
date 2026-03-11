@@ -55,6 +55,8 @@ Nhóm tasks theo **domain/concern**, KHÔNG theo thứ tự thời gian:
 
 Tạo file `docs/TASK_BOARD.md` theo template `templates/docs/TASK_BOARD.md`.
 
+Sau khi tạo xong → chạy `/qc --plan` để tạo QC Test Plan cho mỗi stream (gắn vào TASK_BOARD.md).
+
 **BẮT BUỘC** phải có đầy đủ các sections sau:
 
 1. **Parallel Execution Strategy** — tổng quan streams + waves
@@ -236,7 +238,7 @@ Tất cả streams Phase [X] đã xong. Chạy bước 6-7 của /parallel-phase
 
 2. `vercel --prod --yes` — deploy thành công
 
-3. Test trên Telegram — verify bot commands hoạt động
+3. Chạy `/qc --run` — verify test cases + regression → tạo `docs/QC_REPORT.md`
 4. Review TASK_BOARD.md → confirm 100%
 5. Chạy `/code-review` trên toàn bộ diff của phase → fix P0/P1
 

@@ -57,8 +57,8 @@ description: Quy trình phát triển tính năng mới từ analyze đến depl
 - `python3 -m py_compile <files>` — verify syntax
   // turbo
 - `vercel --prod --yes` — deploy thành công
-- Test trên Telegram: gửi commands, verify responses
-- Check edge cases (empty input, invalid data, unauthorized)
+- Chạy `/qc --run` nếu feature phức tạp (≥ 3 handlers hoặc cross-module)
+- Hoặc verify thủ công nếu feature đơn giản: gửi commands, check edge cases
 
 ## 8. Commit & Docs
 

@@ -61,6 +61,7 @@ vercel --prod --yes
 
 #### Update nếu task liên quan:
 
+- [ ] `docs/QC_REPORT.md` — update nếu đã chạy `/qc --run` trong task này
 - [ ] `docs/PROJECT_CONTEXT.md` — thay đổi kiến trúc, thêm service/tool, đổi deploy URL
 - [ ] `docs/ARCHITECTURE.md` — thêm/sửa component, thay đổi data flow, thêm diagram
 - [ ] `docs/BOT_FLOWS.md` — thêm/sửa command, thay đổi conversation flow
