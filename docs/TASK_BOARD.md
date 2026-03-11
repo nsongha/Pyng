@@ -146,12 +146,12 @@ CREATE TABLE point_transactions (
 
 | #   | Task                                    | Status | Priority | Dependencies | Files affected                          |
 | --- | --------------------------------------- | ------ | -------- | ------------ | --------------------------------------- |
-| B1  | Mood prompt sau check-in                | 📋     | P0       | A2, A3       | `bot/handlers/mood.py` [NEW]            |
-| B2  | Leaderboard command (/leaderboard, /xh) | 📋     | P0       | A1           | `bot/handlers/gamification.py` [NEW]    |
-| B3  | Stats/Points command (/points, /diem)   | 📋     | P0       | A1           | `bot/handlers/gamification.py`          |
-| B4  | Streak display khi check-in             | 📋     | P1       | A1           | `bot/handlers/gamification.py`          |
-| B5  | Burnout alert cho manager               | 📋     | P2       | A2           | `bot/handlers/mood.py`                  |
-| B6  | Register gamification handlers          | 📋     | P0       | B1-B5        | `bot/app.py`                            |
+| B1  | Mood prompt sau check-in                | ✅     | P0       | A2, A3       | `bot/handlers/mood.py` [NEW]            |
+| B2  | Leaderboard command (/leaderboard, /xh) | ✅     | P0       | A1           | `bot/handlers/gamification.py` [NEW]    |
+| B3  | Stats/Points command (/points, /diem)   | ✅     | P0       | A1           | `bot/handlers/gamification.py`          |
+| B4  | Streak display khi check-in             | ✅     | P1       | A1           | `bot/handlers/gamification.py`          |
+| B5  | Burnout alert cho manager               | ✅     | P2       | A2           | `bot/handlers/mood.py`                  |
+| B6  | Register gamification handlers          | ✅     | P0       | B1-B5        | `bot/app.py`                            |
 
 **Acceptance Criteria:**
 
@@ -200,10 +200,10 @@ CREATE TABLE point_transactions (
 
 | #   | Task                                    | Status | Priority | Dependencies | Files affected                        |
 | --- | --------------------------------------- | ------ | -------- | ------------ | ------------------------------------- |
-| D1  | Auth Service (Telegram initData verify) | 📋     | P0       | —            | `services/auth_service.py` [NEW]      |
-| D2  | GET /api/me (user info + stats)         | 📋     | P0       | D1, A1       | `api/me.py` [NEW]                     |
-| D3  | GET /api/checkins (check-in history)    | 📋     | P0       | D1           | `api/checkins.py` [NEW]               |
-| D4  | GET /api/leaderboard                    | 📋     | P1       | D1, A1       | `api/leaderboard.py` [NEW]            |
+| D1  | Auth Service (Telegram initData verify) | ✅     | P0       | —            | `services/auth_service.py` [NEW]      |
+| D2  | GET /api/me (user info + stats)         | ✅     | P0       | D1, A1       | `api/me.py` [NEW]                     |
+| D3  | GET /api/checkins (check-in history)    | ✅     | P0       | D1           | `api/checkins.py` [NEW]               |
+| D4  | GET /api/leaderboard                    | ✅     | P1       | D1, A1       | `api/leaderboard.py` [NEW]            |
 
 **Acceptance Criteria:**
 
@@ -287,11 +287,11 @@ CREATE TABLE point_transactions (
 | Stream              | Total  | Done  | Remaining | %      |
 | ------------------- | ------ | ----- | --------- | ------ |
 | 🏆 A (Services)     | 3      | 3     | 0         | 100%   |
-| 🎮 B (Bot)          | 6      | 0     | 6         | 0%     |
+| 🎮 B (Bot)          | 6      | 6     | 0         | 100%   |
 | ⚛️ C (Mini App)      | 4 (6-2) | 0   | 4         | 0%     |
-| 🔌 D (API)          | 4      | 0     | 4         | 0%     |
+| 🔌 D (API)          | 4      | 4     | 0         | 100%   |
 | 🧪 E (Testing)      | 3      | 0     | 3         | 0%     |
-| **All**             | **20** | **3** | **17**    | **15%** |
+| **All**             | **20** | **13** | **7**    | **65%** |
 
 ---
 
