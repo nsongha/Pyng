@@ -118,12 +118,14 @@ def _notify_admin_leave_request(user_name: str, leave_type: str, start_date: str
 
 def _handle_get_my_leaves(handler_self) -> None:
     """GET /api/leave/my — Danh sách leaves + balance."""
+    telegram_id = None
+    year = None
     try:
         telegram_id = handler_self._telegram_user["id"]
 
         user = get_by_telegram_id(telegram_id)
         if not user:
-            json_api_response(handler_self, 404, {"error": "User not found"})
+            json_api_response(handler_self, 404, {"ok": False, "error": "User not found"})
             return
 
         parsed_url = urlparse(handler_self.path)
@@ -137,7 +139,11 @@ def _handle_get_my_leaves(handler_self) -> None:
             try:
                 year = int(year_str)
             except ValueError:
-                json_api_response(handler_self, 400, {"error": "Invalid year format"})
+                json_api_response(handler_self, 400, {"ok": False, "error": "Invalid year format"})
+                return
+            # Validate year range
+            if year < 2020 or year > 2100:
+                json_api_response(handler_self, 400, {"ok": False, "error": "Year must be between 2020 and 2100"})
                 return
         else:
             year = now.year
@@ -152,30 +158,31 @@ def _handle_get_my_leaves(handler_self) -> None:
             "balance": balance,
         })
 
-    except Exception:
-        logger.exception("GET /api/leave/my error")
-        json_api_response(handler_self, 500, {"ok": False, "error": "Internal error"})
+    except Exception as e:
+        logger.exception("GET /api/leave/my error — telegram_id=%s year=%s", telegram_id, year)
+        json_api_response(handler_self, 500, {"ok": False, "error": f"Internal error: {type(e).__name__}"})
 
 
 def _handle_post_leave_request(handler_self) -> None:
     """POST /api/leave/request — Tạo leave request mới."""
+    telegram_id = None
     try:
         telegram_id = handler_self._telegram_user["id"]
 
         user = get_by_telegram_id(telegram_id)
         if not user:
-            json_api_response(handler_self, 404, {"error": "User not found"})
+            json_api_response(handler_self, 404, {"ok": False, "error": "User not found"})
             return
 
         try:
             body = parse_request_body(handler_self)
         except ValueError as e:
-            json_api_response(handler_self, 400, {"error": str(e)})
+            json_api_response(handler_self, 400, {"ok": False, "error": str(e)})
             return
 
         is_valid, error_msg = _validate_leave_request(body, user["id"])
         if not is_valid:
-            json_api_response(handler_self, 409, {"error": error_msg})
+            json_api_response(handler_self, 409, {"ok": False, "error": error_msg})
             return
 
         start_date = date.fromisoformat(body["start_date"])
@@ -202,9 +209,9 @@ def _handle_post_leave_request(handler_self) -> None:
             "leave": leave,
         })
 
-    except Exception:
-        logger.exception("POST /api/leave/request error")
-        json_api_response(handler_self, 500, {"ok": False, "error": "Internal error"})
+    except Exception as e:
+        logger.exception("POST /api/leave/request error — telegram_id=%s", telegram_id)
+        json_api_response(handler_self, 500, {"ok": False, "error": f"Internal error: {type(e).__name__}"})
 
 
 # --- Vercel Handler ---

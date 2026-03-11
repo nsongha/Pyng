@@ -105,12 +105,13 @@ def _get_checkin_history(user_id: int, limit: int, offset: int) -> list[dict]:
 
 def _handle_checkins_list(handler_self) -> None:
     """GET /api/checkins — Paginated check-in history."""
+    telegram_id = None
     try:
         telegram_id = handler_self._telegram_user["id"]
 
         user = get_by_telegram_id(telegram_id)
         if not user:
-            json_api_response(handler_self, 404, {"error": "User not found"})
+            json_api_response(handler_self, 404, {"ok": False, "error": "User not found"})
             return
 
         parsed_url = urlparse(handler_self.path)
@@ -130,9 +131,9 @@ def _handle_checkins_list(handler_self) -> None:
             },
         })
 
-    except Exception:
-        logger.exception("GET /api/checkins error")
-        json_api_response(handler_self, 500, {"ok": False, "error": "Internal error"})
+    except Exception as e:
+        logger.exception("GET /api/checkins error — telegram_id=%s", telegram_id)
+        json_api_response(handler_self, 500, {"ok": False, "error": f"Internal error: {type(e).__name__}"})
 
 
 # ============================================
@@ -358,12 +359,14 @@ def _get_month_avg_hours(user_id: int, month: int, year: int) -> float:
 
 def _handle_chart_data(handler_self) -> None:
     """GET /api/checkins/chart — Chart data cho tháng."""
+    telegram_id = None
+    month_str = None
     try:
         telegram_id = handler_self._telegram_user["id"]
 
         user = get_by_telegram_id(telegram_id)
         if not user:
-            json_api_response(handler_self, 404, {"error": "User not found"})
+            json_api_response(handler_self, 404, {"ok": False, "error": "User not found"})
             return
 
         parsed_url = urlparse(handler_self.path)
@@ -379,14 +382,14 @@ def _handle_chart_data(handler_self) -> None:
                 year = int(parts[0])
                 month = int(parts[1])
             except (ValueError, IndexError):
-                json_api_response(handler_self, 400, {"error": "Invalid month format. Use YYYY-MM"})
+                json_api_response(handler_self, 400, {"ok": False, "error": "Invalid month format. Use YYYY-MM"})
                 return
         else:
             year = now.year
             month = now.month
 
         if month < 1 or month > 12 or year < _MIN_YEAR or year > _MAX_YEAR:
-            json_api_response(handler_self, 400, {"error": "Invalid month/year"})
+            json_api_response(handler_self, 400, {"ok": False, "error": "Invalid month/year"})
             return
 
         chart_data = _get_chart_data(user["id"], month, year)
@@ -397,9 +400,12 @@ def _handle_chart_data(handler_self) -> None:
             **chart_data,
         })
 
-    except Exception:
-        logger.exception("GET /api/checkins/chart error")
-        json_api_response(handler_self, 500, {"ok": False, "error": "Internal error"})
+    except Exception as e:
+        logger.exception(
+            "GET /api/checkins/chart error — telegram_id=%s month=%s",
+            telegram_id, month_str,
+        )
+        json_api_response(handler_self, 500, {"ok": False, "error": f"Internal error: {type(e).__name__}"})
 
 
 # --- Vercel Handler ---

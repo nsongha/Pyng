@@ -31,17 +31,20 @@ MAX_AUTH_AGE_SECONDS = 3600
 # Core: Validate Telegram initData
 # ------------------------------------------------------------------
 
-def validate_telegram_init_data(init_data_str: str) -> bool:
+def validate_telegram_init_data(init_data_str: str) -> tuple[bool, str]:
     """Validate Telegram WebApp initData bằng HMAC-SHA256.
 
     Args:
         init_data_str: Raw initData query string từ Telegram WebApp.
 
     Returns:
-        bool: True nếu data hợp lệ.
+        tuple[bool, str]: (is_valid, error_reason).
+            error_reason rỗng khi valid.
     """
-    if not init_data_str or not TELEGRAM_BOT_TOKEN:
-        return False
+    if not TELEGRAM_BOT_TOKEN:
+        return False, "Bot token not configured"
+    if not init_data_str:
+        return False, "Missing auth header"
 
     try:
         # 1. Parse query string
@@ -50,7 +53,7 @@ def validate_telegram_init_data(init_data_str: str) -> bool:
         # 2. Extract hash
         received_hash = parsed.get("hash", [None])[0]
         if not received_hash:
-            return False
+            return False, "Missing hash in initData"
 
         # 3. Tạo data_check_string: sort params (trừ hash), join bằng \n
         data_pairs = []
@@ -79,7 +82,7 @@ def validate_telegram_init_data(init_data_str: str) -> bool:
 
         # 6. So sánh (constant-time để tránh timing attack)
         if not hmac.compare_digest(computed_hash, received_hash):
-            return False
+            return False, "Invalid signature"
 
         # 7. Check auth_date không quá cũ
         auth_date_str = parsed.get("auth_date", [None])[0]
@@ -87,13 +90,13 @@ def validate_telegram_init_data(init_data_str: str) -> bool:
             auth_date = int(auth_date_str)
             if time.time() - auth_date > MAX_AUTH_AGE_SECONDS:
                 logger.warning("initData expired: auth_date=%s", auth_date_str)
-                return False
+                return False, "Token expired"
 
-        return True
+        return True, ""
 
     except Exception:
         logger.exception("validate_telegram_init_data error")
-        return False
+        return False, "Validation error"
 
 
 def parse_telegram_user(init_data_str: str) -> dict | None:
@@ -139,7 +142,7 @@ def require_auth(method):
     """Decorator cho Vercel serverless handler methods.
 
     Đọc header X-Telegram-Init-Data, validate, inject self._telegram_user.
-    Return 401 nếu invalid.
+    Return 401 với error reason cụ thể nếu invalid.
 
     Usage:
         class handler(BaseHTTPRequestHandler):
@@ -151,13 +154,14 @@ def require_auth(method):
     def wrapper(self, *args, **kwargs):
         init_data = self.headers.get("X-Telegram-Init-Data", "")
 
-        if not validate_telegram_init_data(init_data):
-            json_api_response(self, 401, {"error": "Unauthorized"})
+        is_valid, error_reason = validate_telegram_init_data(init_data)
+        if not is_valid:
+            json_api_response(self, 401, {"ok": False, "error": error_reason})
             return
 
         telegram_user = parse_telegram_user(init_data)
         if not telegram_user or not telegram_user.get("id"):
-            json_api_response(self, 401, {"error": "Invalid user data"})
+            json_api_response(self, 401, {"ok": False, "error": "Invalid user data"})
             return
 
         # Inject user vào handler instance

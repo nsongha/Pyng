@@ -27,11 +27,14 @@ logger = logging.getLogger(__name__)
 def _get_checkin_stats_this_month(user_id: int) -> dict:
     """Tính check-in summary tháng này.
 
+    Returns dict khớp với TypeScript CheckinStats interface:
+        {total_days, late_days, wfh_days, leave_days, ontime_percentage}
+
     Args:
         user_id: ID user (bảng users.id).
 
     Returns:
-        dict: {total, ontime, late, wfh}
+        dict: CheckinStats-compatible format.
     """
     tz = get_tz()
     now = datetime.now(tz)
@@ -52,16 +55,32 @@ def _get_checkin_stats_this_month(user_id: int) -> dict:
         },
     )
 
-    total = len(rows)
+    total_days = len(rows)
     ontime = sum(1 for r in rows if r.get("is_ontime"))
-    wfh = sum(1 for r in rows if r.get("method") == "wfh")
-    late = total - ontime - wfh
+    wfh_days = sum(1 for r in rows if r.get("method") == "wfh")
+    late_days = max(0, total_days - ontime - wfh_days)
+
+    # Leave days tháng này (approved)
+    leave_rows = db.select(
+        "leaves",
+        columns="days_count",
+        filters={
+            "user_id": user_id,
+            "status": "approved",
+            "start_date.gte": start.strftime("%Y-%m-%d"),
+            "start_date.lt": end.strftime("%Y-%m-%d"),
+        },
+    )
+    leave_days = sum(float(r.get("days_count", 0)) for r in leave_rows)
+
+    ontime_percentage = round(ontime / total_days * 100, 1) if total_days > 0 else 0
 
     return {
-        "total": total,
-        "ontime": ontime,
-        "late": max(0, late),
-        "wfh": wfh,
+        "total_days": total_days,
+        "late_days": late_days,
+        "wfh_days": wfh_days,
+        "leave_days": leave_days,
+        "ontime_percentage": ontime_percentage,
     }
 
 
@@ -71,19 +90,32 @@ class handler(BaseHTTPRequestHandler):
     @require_auth
     def do_GET(self):
         """Trả về user dashboard data."""
+        telegram_id = None
         try:
             telegram_id = self._telegram_user["id"]
 
             # 1. Lookup user
             user = get_by_telegram_id(telegram_id)
             if not user:
-                json_api_response(self, 404, {"error": "User not found"})
+                json_api_response(self, 404, {"ok": False, "error": "User not found"})
                 return
 
             user_id = user["id"]
 
-            # 2. Gamification stats
-            gami_stats = get_user_stats(user_id)
+            # 2. Gamification stats (safe — user chưa có record thì trả default)
+            try:
+                gami_stats = get_user_stats(user_id)
+            except Exception:
+                logger.warning("get_user_stats failed for user_id=%s", user_id)
+                gami_stats = {
+                    "total_points": 0,
+                    "current_streak": 0,
+                    "longest_streak": 0,
+                    "rank": 0,
+                    "ontime_count": 0,
+                    "early_count": 0,
+                    "streak_label": "🔥 Đang khởi động",
+                }
 
             # 3. Check-in summary tháng
             checkin_stats = _get_checkin_stats_this_month(user_id)
@@ -107,8 +139,8 @@ class handler(BaseHTTPRequestHandler):
             })
 
         except Exception as e:
-            logger.exception("GET /api/me error")
-            json_api_response(self, 500, {"ok": False, "error": "Internal error"})
+            logger.exception("GET /api/me error — telegram_id=%s", telegram_id)
+            json_api_response(self, 500, {"ok": False, "error": f"Internal error: {type(e).__name__}"})
 
     def do_OPTIONS(self):
         """CORS preflight."""
