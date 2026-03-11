@@ -18,7 +18,7 @@ from telegram.ext import (
     filters,
 )
 
-from bot.handlers._helpers import get_active_user_or_none, get_ontime_status, format_current_time
+from bot.handlers._helpers import get_active_user_or_none, get_ontime_status, format_current_time, handle_post_checkin
 from services.qr_service import validate_qr_token, mark_qr_used
 from services.checkin_service import create_checkin, has_checked_in_today
 from services.office_service import get_active_office
@@ -83,16 +83,26 @@ async def handle_qr_deeplink(
         office_id=office_id,
     )
 
-    # 6. Reply success
+    # 6. Gamification + mood (Phase 4)
+    gami_text = await handle_post_checkin(
+        user_id=user["id"],
+        checkin_id=checkin.get("id", 0),
+        checkin_type="in",
+        chat_id=update.effective_chat.id,
+        context=context,
+    )
+
+    # 7. Reply success
     time_str, date_str = format_current_time()
     ontime = get_ontime_status()
+    gami_line = f"\n{gami_text}" if gami_text else ""
 
     await update.message.reply_text(
         f"✅ **Check-in thành công!** (QR Code)\n\n"
         f"👤 {user['full_name']}\n"
         f"🕐 {time_str} — {date_str}\n"
         f"{ontime}\n"
-        f"📍 Phương thức: QR Code\n\n"
+        f"📍 Phương thức: QR Code{gami_line}\n\n"
         f"Chúc bạn ngày làm việc hiệu quả! 💪",
         parse_mode="Markdown",
     )

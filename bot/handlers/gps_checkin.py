@@ -17,7 +17,7 @@ from telegram.ext import ContextTypes, CommandHandler, MessageHandler, filters
 from services.checkin_service import create_checkin, has_checked_in_today, get_today_checkin
 from services.office_service import get_active_office
 from bot.validators.gps_validator import validate_location
-from bot.handlers._helpers import get_active_user_or_none, get_ontime_status, format_current_time
+from bot.handlers._helpers import get_active_user_or_none, get_ontime_status, format_current_time, handle_post_checkin
 from config.settings import OFFICE_LAT, OFFICE_LNG, DEFAULT_GEOFENCE_RADIUS_M
 
 logger = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return
 
     # Lưu DB
-    create_checkin(
+    checkin = create_checkin(
         user_id=user["id"],
         checkin_type="in",
         method="gps",
@@ -121,9 +121,19 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         distance_m=int(result.distance_m),
     )
 
+    # Gamification + mood (Phase 4)
+    gami_text = await handle_post_checkin(
+        user_id=user["id"],
+        checkin_id=checkin.get("id", 0),
+        checkin_type="in",
+        chat_id=update.effective_chat.id,
+        context=context,
+    )
+
     # Response đẹp
     time_str, date_str = format_current_time()
     status = get_ontime_status()
+    gami_line = f"\n{gami_text}" if gami_text else ""
 
     await update.message.reply_text(
         f"✅ **CHECK-IN THÀNH CÔNG!**\n"
@@ -131,7 +141,7 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         f"👤 {user['full_name']}\n"
         f"🕐 {time_str} — {date_str}\n"
         f"📍 {office_name} (cách {result.distance_m:.0f}m)\n"
-        f"{status}\n"
+        f"{status}{gami_line}\n"
         f"━━━━━━━━━━━━━━━━━━━━\n\n"
         f"Gõ /checkout khi tan làm 🚪",
         parse_mode="Markdown",

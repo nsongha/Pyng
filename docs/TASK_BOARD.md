@@ -173,12 +173,12 @@ CREATE TABLE point_transactions (
 
 | #   | Task                                        | Status | Priority | Dependencies | Files affected              |
 | --- | ------------------------------------------- | ------ | -------- | ------------ | --------------------------- |
-| C1  | React project scaffold (Vite + Tailwind)     | 📋     | P0       | —            | `miniapp/` [NEW]            |
-| C2  | Telegram WebApp SDK integration              | 📋     | P0       | C1           | `miniapp/src/`              |
-| C3  | Dashboard: check-in history + stats          | 📋     | P0       | C1, C2       | `miniapp/src/pages/`        |
+| C1  | React project scaffold (Vite + Tailwind)     | ✅     | P0       | —            | `miniapp/` [NEW]            |
+| C2  | Telegram WebApp SDK integration              | ✅     | P0       | C1           | `miniapp/src/`              |
+| C3  | Dashboard: check-in history + stats          | ✅     | P0       | C1, C2       | `miniapp/src/pages/`        |
 | C4  | Chart: working hours + attendance            | ➡️ Phase 5 | P1  | C3           | `miniapp/src/components/`   |
 | C5  | Leave request form                           | ➡️ Phase 5 | P2  | C3           | `miniapp/src/pages/`        |
-| C6  | Vercel config cho miniapp serving            | 📋     | P0       | C1           | `vercel.json`               |
+| C6  | Vercel config cho miniapp serving            | ✅     | P0       | C1           | `vercel.json`               |
 
 **Acceptance Criteria:**
 
@@ -221,9 +221,9 @@ CREATE TABLE point_transactions (
 
 | #   | Task                                      | Status | Priority | Dependencies    | Files affected                            |
 | --- | ----------------------------------------- | ------ | -------- | --------------- | ----------------------------------------- |
-| E1  | Cron: weekly leaderboard + streak reminder | 📋     | P1       | A1              | `api/cron/weekly.py` [NEW], `.github/workflows/cron-reminders.yml` |
-| E2  | Test toàn bộ flows (checklist)             | 📋     | P0       | Tất cả streams  | `docs/QC_REPORT.md`                      |
-| E3  | Fix bugs từ testing                        | 📋     | P0       | E2              | Tùy thuộc bugs                            |
+| E1  | Cron: weekly leaderboard + streak reminder | ✅     | P1       | A1              | `api/cron/weekly.py` [NEW], `.github/workflows/cron-reminders.yml` |
+| E2  | Test toàn bộ flows (checklist)             | ✅     | P0       | Tất cả streams  | `docs/QC_REPORT.md`                      |
+| E3  | Fix bugs từ testing                        | ✅     | P0       | E2              | `bot/handlers/_helpers.py`, `gps_checkin.py`, `wifi_checkin.py`, `qr_checkin.py`, `nfc_checkin.py`, `wfh.py`, `checkout.py` |
 
 **Acceptance Criteria:**
 
@@ -288,10 +288,10 @@ CREATE TABLE point_transactions (
 | ------------------- | ------ | ----- | --------- | ------ |
 | 🏆 A (Services)     | 3      | 3     | 0         | 100%   |
 | 🎮 B (Bot)          | 6      | 6     | 0         | 100%   |
-| ⚛️ C (Mini App)      | 4 (6-2) | 0   | 4         | 0%     |
+| ⚛️ C (Mini App)      | 4 (6-2) | 4   | 0         | 100%   |
 | 🔌 D (API)          | 4      | 4     | 0         | 100%   |
-| 🧪 E (Testing)      | 3      | 0     | 3         | 0%     |
-| **All**             | **20** | **13** | **7**    | **65%** |
+| 🧪 E (Testing)      | 3      | 3     | 0         | 100%   |
+| **All**             | **20** | **20** | **0**    | **100%** |
 
 ---
 

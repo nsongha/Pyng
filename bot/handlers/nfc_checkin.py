@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.handlers._helpers import get_active_user_or_none, get_ontime_status, format_current_time
+from bot.handlers._helpers import get_active_user_or_none, get_ontime_status, format_current_time, handle_post_checkin
 from services.nfc_service import validate_nfc_token
 from services.checkin_service import create_checkin, has_checked_in_today
 from services.office_service import get_active_office
@@ -73,9 +73,19 @@ async def handle_nfc_deeplink(
         office_id=office_id,
     )
 
-    # 5. Reply success
+    # 5. Gamification + mood (Phase 4)
+    gami_text = await handle_post_checkin(
+        user_id=user["id"],
+        checkin_id=checkin.get("id", 0),
+        checkin_type="in",
+        chat_id=update.effective_chat.id,
+        context=context,
+    )
+
+    # 6. Reply success
     time_str, date_str = format_current_time()
     ontime = get_ontime_status()
+    gami_line = f"\n{gami_text}" if gami_text else ""
 
     location_text = nfc_token.get("location", "")
     location_line = f"📌 Vị trí: {location_text}\n" if location_text else ""
@@ -86,7 +96,7 @@ async def handle_nfc_deeplink(
         f"🕐 {time_str} — {date_str}\n"
         f"{ontime}\n"
         f"📍 Phương thức: NFC Tag\n"
-        f"{location_line}\n"
+        f"{location_line}{gami_line}\n"
         f"Chúc bạn ngày làm việc hiệu quả! 💪",
         parse_mode="Markdown",
     )

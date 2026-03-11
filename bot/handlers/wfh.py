@@ -16,7 +16,7 @@ from telegram.ext import (
 )
 
 from services.checkin_service import has_checked_in_today, create_wfh_checkin
-from bot.handlers._helpers import get_active_user_or_none
+from bot.handlers._helpers import get_active_user_or_none, handle_post_checkin
 from config.timezone import get_tz
 
 logger = logging.getLogger(__name__)
@@ -63,14 +63,26 @@ async def handle_wfh_note(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )
         return ConversationHandler.END
 
+    # Gamification (Phase 4) — WFH không hỏi mood
+    checkin = result.get("checkin", {})
+    gami_text = await handle_post_checkin(
+        user_id=user["id"],
+        checkin_id=checkin.get("id", 0),
+        checkin_type="in",
+        chat_id=update.effective_chat.id,
+        context=context,
+        is_wfh=True,
+    )
+
     now = datetime.now(get_tz())
     date_str = now.strftime("%d/%m/%Y")
+    gami_line = f"\n{gami_text}" if gami_text else ""
 
     await update.message.reply_text(
         f"✅ **Đã ghi nhận WFH!**\n\n"
         f"📅 {date_str} — Work From Home\n"
         f"📝 {note or '(không có ghi chú)'}\n"
-        f"📊 WFH tháng này: {result['wfh_count']}/{result['wfh_limit']}\n\n"
+        f"📊 WFH tháng này: {result['wfh_count']}/{result['wfh_limit']}{gami_line}\n\n"
         f"Check-out khi kết thúc ngày làm việc nhé.\n"
         f"Gõ /checkout 🚪",
         parse_mode="Markdown",

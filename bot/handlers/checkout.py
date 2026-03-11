@@ -10,7 +10,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 
 from services.checkin_service import has_checked_in_today, get_today_checkin, create_checkout
-from bot.handlers._helpers import get_active_user_or_none, format_current_time
+from bot.handlers._helpers import get_active_user_or_none, format_current_time, handle_post_checkin
 
 logger = logging.getLogger(__name__)
 
@@ -40,16 +40,27 @@ async def checkout_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         await update.message.reply_text(f"❌ {result['error']}")
         return
 
+    # Gamification cho checkout (Phase 4)
+    checkout = result.get("checkout", {})
+    gami_text = await handle_post_checkin(
+        user_id=user["id"],
+        checkin_id=checkout.get("id", 0),
+        checkin_type="out",
+        chat_id=update.effective_chat.id,
+        context=context,
+    )
+
     time_str, _ = format_current_time()
     hours = result["working_hours"]
     minutes = result["working_minutes"]
     hours_display = f"{int(hours)} giờ {minutes % 60} phút"
+    gami_line = f"\n{gami_text}" if gami_text else ""
 
     await update.message.reply_text(
         f"✅ **CHECK-OUT THÀNH CÔNG!**\n"
         f"━━━━━━━━━━━━━━━━━━━━\n"
         f"🕐 Ra về: {time_str}\n"
-        f"⏱️ Thời gian làm việc: {hours_display}\n"
+        f"⏱️ Thời gian làm việc: {hours_display}{gami_line}\n"
         f"━━━━━━━━━━━━━━━━━━━━\n\n"
         f"Nghỉ ngơi ngon nhé! 🌙",
         parse_mode="Markdown",
