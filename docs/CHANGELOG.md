@@ -14,6 +14,27 @@
   - `services/mood_service.py` — Mood tracking, burnout detection, mood stats (4 functions)
   - `services/checkin_service.py` — Thêm `mood` param + `process_gamification_after_checkin()` orchestrator
 
+- **Phase 4 — Gamification Bot** (Stream B, Wave 2):
+  - `bot/handlers/gamification.py` — `/leaderboard`, `/points` commands, streak display
+  - `bot/handlers/mood.py` — Mood prompt sau check-in, burnout alert (3 ngày SOS liên tiếp)
+  - `bot/handlers/_helpers.py` — `handle_post_checkin()` integration helper
+  - 6 handlers wired: GPS, WiFi, QR, NFC, WFH, checkout đều gọi gamification + mood
+
+- **Phase 4 — Mini App** (Stream C, Wave 2):
+  - `miniapp/` — React (Vite + TailwindCSS) Telegram Mini App
+  - Dashboard: check-in history, stats, leaderboard, mood
+
+- **Phase 4 — Mini App API** (Stream D, Wave 2):
+  - `services/auth_service.py` — Telegram initData HMAC-SHA256 validation
+  - `api/me.py` — User dashboard data endpoint
+  - `api/checkins.py` — Paginated check-in history
+  - `api/leaderboard.py` — Top 10 leaderboard + user rank
+
+- **Phase 4 — Testing & Launch** (Stream E, Wave 3):
+  - `api/cron/weekly.py` — Weekly leaderboard + streak reminder cron (Monday 9:00 AM)
+  - `.github/workflows/cron-reminders.yml` — Thêm weekly schedule
+  - `docs/QC_REPORT.md` — Compile check 18/18, miniapp build OK, 1 P0 bug fixed
+
 - **Phase 3 — Services Foundation** (Stream A, Wave 1):
   - `services/config_service.py` — CRUD system_config (get/set upsert, get_all)
   - `services/leave_service.py` — Leave request CRUD + business logic (auto business days, trừ phép khi approve, remaining days)

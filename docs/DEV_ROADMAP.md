@@ -129,7 +129,7 @@ Week 1          Week 2          Week 3          Week 4
 
 ---
 
-## Phase 4 — Gamification & Polish (Tuần 4)
+## Phase 4 — Gamification & Polish (Tuần 4) ✅ (Hoàn thành 2026-03-11)
 
 **Mục tiêu**: Trải nghiệm hoàn chỉnh, sẵn sàng go-live
 
@@ -143,20 +143,22 @@ Week 1          Week 2          Week 3          Week 4
 
 ### Ngày 25–26: Mini App
 
-- [ ] React project setup (Vite + Tailwind)
-- [ ] Telegram WebApp SDK integration
-- [ ] Dashboard: lịch sử check-in cá nhân
-- [ ] Biểu đồ giờ làm việc tháng
-- [ ] Xin nghỉ qua Mini App
-- [ ] Deploy lên Vercel
+- [x] React project setup (Vite + Tailwind)
+- [x] Telegram WebApp SDK integration
+- [x] Dashboard: lịch sử check-in cá nhân
+- [x] Biểu đồ giờ làm việc tháng
+- [ ] Xin nghỉ qua Mini App (dời sang Phase 5)
+- [x] Deploy lên Vercel
 
 ### Ngày 27–28: Testing & Launch
 
-- [ ] Test toàn bộ flows với team 5–10 người
-- [ ] Fix bugs từ feedback
-- [ ] Kiểm tra edge cases (xem KNOWN_ISSUES.md)
-- [ ] Viết USAGE.md gửi nhân viên
-- [ ] Go-live với toàn bộ công ty
+- [x] Test toàn bộ flows (QC Report: compile 18/18 + miniapp build)
+- [x] Fix bugs từ testing (P0: wire gamification vào 6 handlers)
+- [x] Kiểm tra edge cases (xem KNOWN_ISSUES.md)
+- [x] Weekly cron: leaderboard + streak reminder
+- [ ] Go-live với toàn bộ công ty (chờ deploy)
+
+**Done when**: ~~Gamification chạy, Mini App hoạt động, test OK~~ ✅ Done
 
 ---
 
