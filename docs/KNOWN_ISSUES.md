@@ -322,3 +322,25 @@ Report:
 □ WFH hiển thị đúng
 □ Nghỉ phép hiển thị đúng
 ```
+
+---
+
+## 🟡 Tech Debt (Phase 4 Code Review)
+
+### TD-001: N+1 query trong leaderboard API
+
+**Severity**: Low (P2)
+**Affects**: API `/api/leaderboard`
+**File**: `api/leaderboard.py` L37-43
+
+**Mô tả**: `_enrich_leaderboard_with_names()` gọi `db.select("users")` per entry (N queries cho N users).
+Bot handler `gamification.py` đã làm đúng batch pattern — copy pattern đó sang API.
+
+### TD-002: CORS wildcard cho Mini App API
+
+**Severity**: Low (P2)
+**Affects**: Mini App API
+**File**: `services/auth_service.py` L189
+
+**Mô tả**: `Access-Control-Allow-Origin: *` — OK cho internal nhưng nên restrict tới `MINI_APP_URL` trong production.
+

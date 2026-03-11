@@ -4,7 +4,9 @@
     "PYTHONPATH": "."
   },
   "rewrites": [
-    { "source": "/qr(.*)", "destination": "/qr/index.html" }
+    { "source": "/qr(.*)", "destination": "/qr/index.html" },
+    { "source": "/miniapp/(.*)", "destination": "/miniapp/dist/index.html" },
+    { "source": "/miniapp", "destination": "/miniapp/dist/index.html" }
   ],
   "headers": [
     {
@@ -12,6 +14,17 @@
       "headers": [
         { "key": "Content-Security-Policy", "value": "default-src 'self'" },
         { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/miniapp/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.telegram.org; frame-ancestors https://web.telegram.org https://desktop-app.telegram.org"
+        },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "ALLOW-FROM https://web.telegram.org" }
       ]
     }
   ]

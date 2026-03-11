@@ -24,6 +24,8 @@ from bot.handlers.leave import (
 )
 from bot.handlers.admin_panel import get_admin_panel_handlers
 from bot.handlers.report import get_report_handlers
+from bot.handlers.gamification import get_gamification_handlers
+from bot.handlers.mood import get_mood_handlers
 
 
 def create_bot() -> Application:
@@ -34,6 +36,7 @@ def create_bot() -> Application:
     2. Command handlers (checkin, checkout)
     3. Message handlers (location)
     4. CallbackQuery handlers (admin approval)
+    5. Gamification commands + mood callbacks (Phase 4)
     """
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
@@ -82,6 +85,15 @@ def create_bot() -> Application:
 
     # 6. Report commands (/report, /baocao — Phase 3)
     for handler in get_report_handlers():
+        app.add_handler(handler)
+
+    # 7. Gamification + Mood (Phase 4)
+    # Gamification commands (/leaderboard, /xh, /points, /diem)
+    for handler in get_gamification_handlers():
+        app.add_handler(handler)
+
+    # Mood inline buttons + burnout alert dismiss
+    for handler in get_mood_handlers():
         app.add_handler(handler)
 
     return app

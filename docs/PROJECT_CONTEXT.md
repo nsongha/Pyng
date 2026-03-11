@@ -101,6 +101,7 @@ GitHub Actions (Cron)
     ├── 17:45 → Nhắc check-out
     ├── 09:15 → Daily report → HR group
     ├── */5   → Refresh QR token (giờ làm việc)
+    ├── Mon 09:00 → Weekly leaderboard + streak reminder
     └── 23:59 → Auto check-out
 
          ↓ tất cả đọc/ghi
@@ -132,6 +133,8 @@ GitHub Actions (Cron)
 - `bot/handlers/wfh.py` — WFH flow (/wfh)
 - `bot/handlers/leave.py` — Leave management: xin nghỉ, duyệt, xem phép (Phase 3)
 - `bot/handlers/report.py` — Report commands: /report today|week|month (Phase 3)
+- `bot/handlers/gamification.py` — Leaderboard (/leaderboard, /xh), Points (/points, /diem) (Phase 4)
+- `bot/handlers/mood.py` — Mood prompt sau check-in, burnout alert cho admin (Phase 4)
 - `bot/validators/gps_validator.py` — Geofence check (geopy), spoofing detection
 - `bot/validators/wifi_validator.py` — SSID whitelist validation
 
@@ -143,6 +146,10 @@ GitHub Actions (Cron)
 - `api/cron/evening.py` — Nhắc check-out 17:45 cho users đã check-in chưa checkout
 - `api/cron/qr_refresh.py` — Cron tạo QR mới mỗi 5 phút (giờ làm việc)
 - `api/cron/daily_report.py` — Báo cáo hàng ngày 9:15 AM gửi admin group (Phase 3)
+- `api/cron/weekly.py` — Weekly leaderboard + streak reminder (Monday 9:00 AM) (Phase 4)
+- `api/me.py` — GET /api/me — User dashboard data (info + gamification + stats) (Phase 4)
+- `api/checkins.py` — GET /api/checkins — Paginated check-in history (Phase 4)
+- `api/leaderboard.py` — GET /api/leaderboard — Top 10 + user rank (Phase 4)
 
 ### Services (`services/`)
 
@@ -155,6 +162,9 @@ GitHub Actions (Cron)
 - `services/config_service.py` — System config CRUD (Phase 3)
 - `services/leave_service.py` — Leave request CRUD + business logic (Phase 3)
 - `services/report_service.py` — Daily/weekly/monthly reports + Excel export (Phase 3)
+- `services/gamification_service.py` — Points, streak, leaderboard, user stats (Phase 4)
+- `services/mood_service.py` — Mood tracking, burnout detection, mood stats (Phase 4)
+- `services/auth_service.py` — Telegram initData HMAC-SHA256 validation, API auth (Phase 4)
 
 ### Database (`db/`)
 
@@ -184,21 +194,21 @@ GitHub Actions (Cron)
 
 ### Cron (GitHub Actions gọi)
 
-| Method | Path                | Mô tả                                    |
-| ------ | ------------------- | ---------------------------------------- |
-| GET    | `/api/cron/morning` | Nhắc check-in 08:30 (cần `CRON_SECRET`)  |
-| GET    | `/api/cron/evening` | Nhắc check-out 17:45 (cần `CRON_SECRET`) |
+| Method | Path                   | Mô tả                                           |
+| ------ | ---------------------- | ----------------------------------------------- |
+| POST   | `/api/cron/morning`    | Nhắc check-in 08:30 (cần `CRON_SECRET`)         |
+| POST   | `/api/cron/evening`    | Nhắc check-out 17:45 (cần `CRON_SECRET`)        |
+| POST   | `/api/cron/daily_report` | Báo cáo hàng ngày 09:15 (Phase 3)             |
+| POST   | `/api/cron/qr_refresh` | Refresh QR mỗi 5 phút (Phase 2)                |
+| POST   | `/api/cron/weekly`     | Leaderboard + streak reminder Monday 09:00 (Phase 4) |
 
-### Mini App API (Phase 2+)
+### Mini App API (Phase 4) — Auth: `X-Telegram-Init-Data` header
 
-| Method | Path                      | Mô tả                     |
-| ------ | ------------------------- | ------------------------- |
-| GET    | `/api/me`                 | Thông tin cá nhân + stats |
-| GET    | `/api/checkins`           | Lịch sử check-in          |
-| GET    | `/api/team/today`         | Trạng thái team hôm nay   |
-| GET    | `/api/leaderboard`        | Bảng xếp hạng điểm        |
-| POST   | `/api/leave/request`      | Xin nghỉ                  |
-| GET    | `/api/admin/report/daily` | Báo cáo hàng ngày (Admin) |
+| Method | Path               | Mô tả                              |
+| ------ | ------------------ | ---------------------------------- |
+| GET    | `/api/me`          | User info + gamification + stats   |
+| GET    | `/api/checkins`    | Paginated check-in history         |
+| GET    | `/api/leaderboard` | Top 10 + user rank (month/alltime) |
 
 ## 10. Tính năng nổi bật
 
@@ -211,8 +221,8 @@ GitHub Actions (Cron)
 
 ## 11. Trạng thái dự án
 
-- **Version**: 0.3.0 (Unreleased)
-- **Phase**: Phase 3 — Admin & Report (hoàn thành)
+- **Version**: 0.4.0 (Unreleased)
+- **Phase**: Phase 4 — Gamification & Polish (hoàn thành)
 - **Target go-live**: 4 tuần từ kick-off
 - **Team size**: 1–2 devs
 
@@ -223,10 +233,11 @@ GitHub Actions (Cron)
 - Phase 1 Wave 2: Bot handlers (start, admin, checkin), cron reminders (morning, evening)
 - Phase 2: QR System, NFC System, Manual Fallback — 4 phương thức check-in hoạt động
 - Phase 3: Admin Panel (/admin), Leave Management (/leave, /phep), Reports (/report, cron daily)
+- Phase 4: Gamification (points, streak, leaderboard), Mood tracking, Mini App dashboard, API endpoints, Weekly cron
 
 ### Next milestone
 
-- Phase 4: Gamification & Polish (điểm, streak, leaderboard, Mini App)
+- Phase 5: Enhancement (Charts Mini App, Leave form Mini App, Face verification, Calendar sync)
 
 → Lộ trình chi tiết: [DEV_ROADMAP.md](./DEV_ROADMAP.md)
 

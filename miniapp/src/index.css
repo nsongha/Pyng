@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/* ============================================
+   Pyng Mini App — Design Tokens (Tailwind v4)
+   ============================================ */
+@theme {
+  /* Brand Colors */
+  --color-brand: #FC3C44;
+  --color-brand-light: #FF6B6F;
+  --color-brand-dark: #D42F36;
+
+  /* Semantic Colors */
+  --color-surface: #FFFFFF;
+  --color-surface-secondary: #F5F5F7;
+  --color-surface-elevated: #FFFFFF;
+
+  --color-text-primary: #1D1D1F;
+  --color-text-secondary: #6E6E73;
+  --color-text-tertiary: #AEAEB2;
+
+  --color-success: #34C759;
+  --color-warning: #FF9F0A;
+  --color-danger: #FF3B30;
+  --color-info: #5AC8FA;
+
+  /* Gamification */
+  --color-streak-fire: #FF6B35;
+  --color-streak-lightning: #FFD60A;
+  --color-streak-diamond: #5E5CE6;
+  --color-points-gold: #FFD700;
+
+  /* Status */
+  --color-ontime: #34C759;
+  --color-late: #FF9F0A;
+  --color-absent: #FF3B30;
+  --color-wfh: #5AC8FA;
+  --color-leave: #AF52DE;
+
+  /* Mood */
+  --color-mood-great: #FF6B35;
+  --color-mood-good: #34C759;
+  --color-mood-tired: #FFD60A;
+  --color-mood-sos: #FF3B30;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+
+  /* Spacing */
+  --spacing-page: 1rem;
+
+  /* Border Radius */
+  --radius-card: 1rem;
+  --radius-badge: 0.5rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================
+   Telegram Theme Integration
+   Use CSS vars from Telegram WebApp SDK
+   ============================================ */
+:root {
+  /* Telegram exposes these via WebApp.themeParams */
+  --tg-bg: var(--tg-theme-bg-color, #FFFFFF);
+  --tg-text: var(--tg-theme-text-color, #1D1D1F);
+  --tg-hint: var(--tg-theme-hint-color, #6E6E73);
+  --tg-link: var(--tg-theme-link-color, #007AFF);
+  --tg-button: var(--tg-theme-button-color, #FC3C44);
+  --tg-button-text: var(--tg-theme-button-text-color, #FFFFFF);
+  --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #F5F5F7);
+  --tg-header-bg: var(--tg-theme-header-bg-color, #FFFFFF);
+  --tg-section-bg: var(--tg-theme-section-bg-color, #FFFFFF);
+  --tg-section-header: var(--tg-theme-section-header-text-color, #6E6E73);
+  --tg-subtitle: var(--tg-theme-subtitle-text-color, #6E6E73);
+  --tg-accent: var(--tg-theme-accent-text-color, #FC3C44);
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background-color: var(--tg-bg);
+  color: var(--tg-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  /* Smooth scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent pull-to-refresh on mobile browsers (let us handle it) */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Skeleton loading animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--tg-secondary-bg) 25%, rgba(255,255,255,0.3) 50%, var(--tg-secondary-bg) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+/* Pull-to-refresh indicator */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Safe area padding for iOS */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
