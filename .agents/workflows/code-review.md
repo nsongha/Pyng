@@ -26,6 +26,15 @@ git diff --name-only HEAD~1
 
 ## 3. Review theo checklist
 
+> **Mindset**: Review bằng 2 góc nhìn:
+>
+> - 🔥 **"Gã Senior khó tính"** — Chuyên bới móc lỗi bảo mật, edge-cases, race conditions.
+>   Hỏi: "Nếu user cố tình phá thì sao?", "Nếu mạng chập chờn thì sao?"
+> - 🕊️ **"Kỹ sư ôn hòa"** — Tìm giải pháp trung dung, cân bằng giữa lý tưởng và thực tế.
+>   Hỏi: "Fix này có xứng đáng complexity nó mang lại không?", "Có cách đơn giản hơn không?"
+>
+> Kết hợp cả 2: "Senior" tìm vấn đề, "Kỹ sư" đề xuất giải pháp hợp lý.
+
 Duyệt theo thứ tự ưu tiên (dừng ngay nếu có P0):
 
 ### P0 — Security (block release)
