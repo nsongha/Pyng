@@ -192,9 +192,35 @@ Week 1          Week 2          Week 3          Week 4
 
 ---
 
-## Phase 6 — Advanced (Chưa bắt đầu)
+## Phase 6 — Stabilize & Salary (Chưa bắt đầu)
 
-Sau khi ổn định, có thể bổ sung:
+**Mục tiêu**: Fix API lỗi trên mini app, polish UX 3 trang hiện có, tích hợp tính lương
+
+### Wave 1: Fix API & Auth (P0) — 1 ngày
+
+- [ ] Debug HTTP 500 trên `/api/me` (Dashboard blank)
+- [ ] Debug HTTP 500 trên `/api/checkins/chart` (Thống kê blank)
+- [ ] Debug lỗi "string did not match expected pattern" trên `/api/leave/my` (Nghỉ phép)
+- [ ] Verify Telegram initData auth flow end-to-end (HMAC-SHA256 validation)
+- [ ] Test cả 3 trang trên Telegram mobile sau khi fix
+
+### Wave 2: Mini App Polish (P1) — 1 ngày
+
+- [ ] Error handling: hiển thị lỗi cụ thể thay vì generic "HTTP 500"
+- [ ] Empty states: UI đẹp hơn khi chưa có data (first-time user)
+- [ ] Loading states / skeleton consistent cả 3 trang
+- [ ] Offline fallback / retry logic cải thiện
+- [ ] Dark/light mode test trên Telegram
+
+### Wave 3: Tích hợp phần mềm lương (High) — 1 tuần
+
+- [ ] Thiết kế salary calculation logic (basic salary + OT + deductions)
+- [ ] API endpoint: GET `/api/salary` (monthly salary summary)
+- [ ] Mini App: trang Lương hoặc tab trong Dashboard
+- [ ] Tích hợp dữ liệu check-in + OT + nghỉ phép vào tính lương
+- [ ] Export bảng lương (Excel)
+
+### Backlog (dời sang Phase 7+)
 
 | Feature                       | Ưu tiên | Effort |
 | ----------------------------- | ------- | ------ |
@@ -203,7 +229,8 @@ Sau khi ổn định, có thể bổ sung:
 | Slack/Notion integration      | Low     | 2 ngày |
 | Multi-office support nâng cao | Low     | 3 ngày |
 | Analytics dashboard nâng cao  | Low     | 3 ngày |
-| Tích hợp phần mềm lương       | High    | 1 tuần |
+
+**Done when**: 3 trang miniapp hoạt động đúng trên Telegram, tính lương cơ bản chạy được
 
 ---
 

@@ -221,8 +221,8 @@ GitHub Actions (Cron)
 
 ## 11. Trạng thái dự án
 
-- **Version**: 0.4.0 (Unreleased)
-- **Phase**: Phase 4 — Gamification & Polish (hoàn thành)
+- **Version**: 0.5.0 (Unreleased)
+- **Phase**: Phase 5 — Enhancement (hoàn thành)
 - **Target go-live**: 4 tuần từ kick-off
 - **Team size**: 1–2 devs
 
@@ -237,7 +237,7 @@ GitHub Actions (Cron)
 
 ### Next milestone
 
-- Phase 5: Enhancement (Charts Mini App, Leave form Mini App, Face verification, Calendar sync)
+- Phase 6: Stabilize & Salary (Fix API 500, polish miniapp UX, tích hợp tính lương)
 
 → Lộ trình chi tiết: [DEV_ROADMAP.md](./DEV_ROADMAP.md)
 
