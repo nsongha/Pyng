@@ -85,8 +85,10 @@ def _validate_leave_request(body: dict, user_id: int) -> tuple[bool, str]:
     return True, ""
 
 
-async def _notify_admin_leave_request(user_name: str, leave_type: str, start_date: str, end_date: str, reason: str | None) -> None:
+def _notify_admin_leave_request(user_name: str, leave_type: str, start_date: str, end_date: str, reason: str | None) -> None:
     """Gửi notification cho admin group về leave request mới.
+
+    Dùng httpx sync (không async) vì Vercel serverless handler là sync.
 
     Args:
         user_name: Tên nhân viên.
@@ -98,7 +100,7 @@ async def _notify_admin_leave_request(user_name: str, leave_type: str, start_dat
     if not ADMIN_GROUP_ID or not TELEGRAM_BOT_TOKEN:
         return
 
-    from services.cron_helpers import send_telegram_message
+    import httpx
 
     label = LEAVE_TYPE_LABELS.get(leave_type, leave_type)
     reason_text = f"\n📝 Lý do: {reason}" if reason else ""
@@ -113,7 +115,12 @@ async def _notify_admin_leave_request(user_name: str, leave_type: str, start_dat
     )
 
     try:
-        await send_telegram_message(ADMIN_GROUP_ID, text)
+        api_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        httpx.post(api_url, json={
+            "chat_id": ADMIN_GROUP_ID,
+            "text": text,
+            "parse_mode": "Markdown",
+        }, timeout=10)
     except Exception as e:
         logger.warning("Failed to notify admin group about leave request: %s", e)
 
@@ -158,28 +165,14 @@ class handler(BaseHTTPRequestHandler):
                 reason=body.get("reason"),
             )
 
-            # Notify admin (async, fire-and-forget)
-            import asyncio
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    loop.create_task(_notify_admin_leave_request(
-                        user.get("full_name", ""),
-                        body["leave_type"],
-                        body["start_date"],
-                        body["end_date"],
-                        body.get("reason"),
-                    ))
-                else:
-                    asyncio.run(_notify_admin_leave_request(
-                        user.get("full_name", ""),
-                        body["leave_type"],
-                        body["start_date"],
-                        body["end_date"],
-                        body.get("reason"),
-                    ))
-            except Exception:
-                logger.warning("Failed to send admin notification for leave request")
+            # Notify admin (sync httpx)
+            _notify_admin_leave_request(
+                user.get("full_name", ""),
+                body["leave_type"],
+                body["start_date"],
+                body["end_date"],
+                body.get("reason"),
+            )
 
             json_api_response(self, 201, {
                 "ok": True,

@@ -17,10 +17,13 @@ from urllib.parse import urlparse, parse_qs
 
 from services.auth_service import require_auth, json_api_response, handle_cors_preflight
 from services.user_service import get_by_telegram_id
-from services.report_service import _is_late
+from services.report_service import is_late as check_is_late
 from db import client as db
 from config.timezone import get_tz
 from config.settings import WORK_START
+
+# Validation bounds
+_MIN_YEAR, _MAX_YEAR = 2020, 2100
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +131,7 @@ def _get_chart_data(user_id: int, month: int, year: int) -> dict:
             hours = round(diff.total_seconds() / 3600, 1)
             hours = max(0, hours)  # Tránh giá trị âm
 
-        is_late = _is_late(ci["checked_at"])
+        is_late = check_is_late(ci["checked_at"])
         method = ci.get("method")
         mood = ci.get("mood")
 
@@ -295,6 +298,11 @@ class handler(BaseHTTPRequestHandler):
             else:
                 year = now.year
                 month = now.month
+
+            # Validate bounds
+            if month < 1 or month > 12 or year < _MIN_YEAR or year > _MAX_YEAR:
+                json_api_response(self, 400, {"error": "Invalid month/year"})
+                return
 
             chart_data = _get_chart_data(user["id"], month, year)
 

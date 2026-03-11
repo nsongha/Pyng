@@ -274,8 +274,8 @@ export function LeaveForm({ balance, onSuccess }: LeaveFormProps) {
         <div
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
           style={{
-            backgroundColor: '#FFF3E0',
-            color: '#E65100',
+            backgroundColor: 'var(--color-warning-bg, #FFF3E0)',
+            color: 'var(--color-warning-text, #E65100)',
           }}
         >
           <span>⚠️</span>
@@ -315,8 +315,8 @@ export function LeaveForm({ balance, onSuccess }: LeaveFormProps) {
         <div
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
           style={{
-            backgroundColor: '#FFEBEE',
-            color: '#C62828',
+            backgroundColor: 'var(--color-error-bg, #FFEBEE)',
+            color: 'var(--color-error-text, #C62828)',
           }}
         >
           <span>❌</span>

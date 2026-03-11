@@ -21,6 +21,9 @@ from config.timezone import get_tz
 
 logger = logging.getLogger(__name__)
 
+# Validation bounds
+_MIN_YEAR, _MAX_YEAR = 2020, 2100
+
 
 class handler(BaseHTTPRequestHandler):
     """Vercel serverless handler — GET /api/overtime."""
@@ -55,6 +58,11 @@ class handler(BaseHTTPRequestHandler):
             else:
                 year = now.year
                 month = now.month
+
+            # Validate bounds
+            if month < 1 or month > 12 or year < _MIN_YEAR or year > _MAX_YEAR:
+                json_api_response(self, 400, {"error": "Invalid month/year"})
+                return
 
             ot_data = get_monthly_overtime(user["id"], month, year)
 

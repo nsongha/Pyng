@@ -40,6 +40,7 @@ from services.nfc_service import (
 )
 from bot.handlers._helpers import get_ontime_status, format_current_time
 from config.settings import QR_EXPIRE_SECONDS, QR_DISPLAY_URL
+from db import client as db
 
 # Conversation states cho admin flows
 ADMIN_GPS_RADIUS = 100
@@ -482,7 +483,6 @@ async def handle_manual_approval(
     )
 
     # Update checkin record — set manual approval fields
-    from db import client as db
     db.update(
         "checkins",
         {
@@ -647,8 +647,7 @@ async def handle_bulk_approve(
             )
 
             # Update record — set manual approval fields
-            from db import client as _db
-            _db.update(
+            db.update(
                 "checkins",
                 {
                     "is_manual_approved": True,

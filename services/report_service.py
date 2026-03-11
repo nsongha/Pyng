@@ -44,7 +44,7 @@ def _date_range(target_date: date) -> tuple[str, str]:
     return start.isoformat(), end.isoformat()
 
 
-def _is_late(checked_at_str: str) -> bool:
+def is_late(checked_at_str: str) -> bool:
     """Kiểm tra check-in có muộn không (so với WORK_START + 5 phút grace).
 
     Args:
@@ -143,7 +143,7 @@ def get_daily_report_data(target_date: date | None = None) -> dict:
             wfh.append(entry)
         else:
             present.append(entry)
-            if _is_late(ci["checked_at"]):
+            if is_late(ci["checked_at"]):
                 late.append(entry)
 
     # 5. On leave (có user info)
@@ -406,6 +406,10 @@ def generate_monthly_excel(month: int, year: int) -> bytes:
     current_date = first_day
     tz = get_tz()
 
+    # Query users 1 lần ngoài loop (fix N+1)
+    all_users = db.select("users", filters={"is_active": True})
+    user_map = {u["id"]: u for u in all_users}
+
     while current_date <= last_day:
         if current_date.weekday() >= 5:
             current_date += timedelta(days=1)
@@ -436,10 +440,6 @@ def generate_monthly_excel(month: int, year: int) -> bytes:
         )
         checkout_map = {co["user_id"]: co for co in checkouts}
 
-        # Users
-        all_users = db.select("users", filters={"is_active": True})
-        user_map = {u["id"]: u for u in all_users}
-
         # Ghi users đã check-in
         checked_user_ids = set()
         for ci in checkins:
@@ -456,7 +456,7 @@ def generate_monthly_excel(month: int, year: int) -> bytes:
             co = checkout_map.get(uid)
             time_out = _format_checkin_time(co["checked_at"]) if co else "—"
             method = ci.get("method", "")
-            status = "Muộn" if _is_late(ci["checked_at"]) else "Đúng giờ"
+            status = "Muộn" if is_late(ci["checked_at"]) else "Đúng giờ"
 
             ws_detail.cell(row=detail_row, column=1, value=current_date.strftime("%d/%m"))
             ws_detail.cell(row=detail_row, column=2, value=user["full_name"])
@@ -561,6 +561,10 @@ def generate_custom_range_excel(start_date: date, end_date: date) -> bytes:
     current_date = start_date
     tz = get_tz()
 
+    # Query users 1 lần ngoài loop (fix N+1)
+    all_users = db.select("users", filters={"is_active": True})
+    user_map = {u["id"]: u for u in all_users}
+
     while current_date <= end_date:
         if current_date.weekday() >= 5:
             current_date += timedelta(days=1)
@@ -589,9 +593,6 @@ def generate_custom_range_excel(start_date: date, end_date: date) -> bytes:
         )
         checkout_map = {co["user_id"]: co for co in checkouts}
 
-        all_users = db.select("users", filters={"is_active": True})
-        user_map = {u["id"]: u for u in all_users}
-
         checked_user_ids = set()
         for ci in checkins:
             uid = ci["user_id"]
@@ -607,7 +608,7 @@ def generate_custom_range_excel(start_date: date, end_date: date) -> bytes:
             co = checkout_map.get(uid)
             time_out = _format_checkin_time(co["checked_at"]) if co else "—"
             method = ci.get("method", "")
-            status = "Muộn" if _is_late(ci["checked_at"]) else "Đúng giờ"
+            status = "Muộn" if is_late(ci["checked_at"]) else "Đúng giờ"
 
             ws_detail.cell(row=detail_row, column=1, value=current_date.strftime("%d/%m"))
             ws_detail.cell(row=detail_row, column=2, value=user["full_name"])
