@@ -346,3 +346,21 @@ Report:
 
 **Mô tả**: `Access-Control-Allow-Origin: *` → thay bằng `_get_cors_origin()` dùng `MINI_APP_URL` env var, fallback `*` cho dev.
 
+### DEPLOY-001: Miniapp 404 trên production
+
+**Severity**: High (P1)
+**Status**: ✅ Resolved (2026-03-11)
+**Affects**: Mini App
+**Files**: `vercel.json`, `.vercelignore`
+
+**Root Cause**: 3 issues chồng nhau:
+1. `.vercelignore` exclude `miniapp/index.html` → Vite không tìm được entry module khi build
+2. Không có `outputDirectory` → Vercel expect `public/` sau build
+3. Source `index.html` xung đột với rewrites (Vercel serve file tĩnh trước rewrites)
+
+**Fix**:
+- Xóa `miniapp/index.html` khỏi `.vercelignore`
+- Thêm `outputDirectory: "."` vào `vercel.json`
+- Build command: `cd miniapp && npx vite build && rm index.html` (xóa source sau build)
+- Set `NODE_VERSION=22` trên Vercel Settings > Environment Variables
+

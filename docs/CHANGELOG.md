@@ -113,6 +113,12 @@
 
 ### fix
 
+- **Miniapp 404**: Fix deployment — Vercel không build miniapp do `.vercelignore` exclude `index.html`
+  - Thêm `installCommand` + `buildCommand` vào `vercel.json`
+  - Set `outputDirectory: "."` cho Python serverless + static miniapp
+  - Xóa source `index.html` sau build để rewrites serve `dist/index.html`
+  - Set `NODE_VERSION=22` trên Vercel (Vite 7 + Tailwind v4 yêu cầu)
+
 - **admin.py**: Fix `db.update()` gọi sai signature cho manual approval (P0)
 
 - **Vercel deploy**: Bỏ `supabase` SDK — conflict httpx version với `python-telegram-bot`
