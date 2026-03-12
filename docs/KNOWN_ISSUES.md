@@ -429,3 +429,20 @@ Report:
 
 **Fix**: Tăng `MAX_AUTH_AGE_SECONDS` từ 3600 (1h) → 86400 (24h). HMAC-SHA256 signature đã đủ bảo mật.
 
+### PERF-001: Serverless cold start — Mini App load chậm lần đầu
+
+**Severity**: Low (P3)
+**Status**: Won't Fix (Platform Limitation)
+**Affects**: Mini App (tất cả API endpoints)
+**Platform**: Vercel Hobby Plan
+
+**Triệu chứng**: Lần mở Mini App đầu tiên (hoặc sau idle >5 phút) load chậm 2-5 giây. Các lần sau nhanh hơn.
+
+**Root Cause**: Vercel Serverless cold start — phải khởi tạo Python runtime + import modules khi function inactive. Hobby plan không hỗ trợ keeping functions warm.
+
+**Workaround**: 
+- User: Đợi 2-5s lần đầu, skeleton loading hiện trong lúc chờ
+- Dev: Giảm import size (lazy import), tối ưu code path
+
+**Fix kế hoạch**: Upgrade Vercel Pro ($20/tháng) → [Fluid Functions](https://vercel.com/docs/functions/fluid) giữ function warm liên tục.
+

@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+### fix
+
+- **Phase 6 — Stabilize & Fix API** (Stream A):
+  - `services/auth_service.py` — Bỏ CORS headers khỏi Python function body (fix JSON parse error trên Vercel)
+  - `services/auth_service.py` — Tăng `MAX_AUTH_AGE_SECONDS` 3600→86400 (fix Token expired)
+  - `api/me.py`, `api/checkins.py` — Bỏ query column `is_ontime` (không tồn tại trong DB)
+  - `vercel.json` — Chuyển CORS headers sang edge config, bỏ CSP `default-src 'self'`
+
 ### feat
 
 - **Phase 5 — Backend Enhancement** (Stream A):

@@ -198,11 +198,12 @@ Week 1          Week 2          Week 3          Week 4
 
 ### Wave 1: Fix API & Auth (P0) — ✅ (Hoàn thành 2026-03-12)
 
-- [x] Debug HTTP 500 trên `/api/me` (Dashboard blank) — fix field names match TS types
-- [x] Debug HTTP 500 trên `/api/checkins/chart` (Thống kê blank) — thêm error handling chi tiết
-- [x] Debug lỗi "string did not match expected pattern" trên `/api/leave/my` — validate year range
-- [x] Verify Telegram initData auth flow end-to-end — auth errors cụ thể (expired/invalid/missing)
-- [x] Structured logging với telegram_id context cho tất cả endpoints
+- [x] Fix CORS headers bị ghi vào response body → `fetch().json()` crash (API-001)
+- [x] Fix column `is_ontime` không tồn tại trong DB → PostgREST error (API-002)
+- [x] Fix Token expired — `MAX_AUTH_AGE_SECONDS` 3600→86400 (API-003)
+- [x] Chuyển CORS headers sang `vercel.json` edge config
+- [x] Bỏ CSP `default-src 'self'` trên API routes
+- [x] Verify 3 trang Mini App (Dashboard, Thống kê, Nghỉ phép) hoạt động trên production
 
 ### Wave 2: Mini App Polish (P1) — 1 ngày
 
