@@ -10,6 +10,7 @@ import { TelegramProvider } from './contexts/TelegramContext';
 import { Dashboard } from './pages/Dashboard';
 import { Charts } from './pages/Charts';
 import { Leave } from './pages/Leave';
+import { Salary } from './pages/Salary';
 import { BottomNav } from './components/BottomNav';
 import { Toast } from './components/Toast';
 import { useNetworkStatus } from './hooks/useNetworkStatus';
@@ -49,6 +50,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/charts" element={<Charts />} />
           <Route path="/leave" element={<Leave />} />
+          <Route path="/salary" element={<Salary />} />
         </Routes>
         <BottomNav />
       </TelegramProvider>

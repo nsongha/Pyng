@@ -253,3 +253,31 @@ export const LEAVE_STATUS_LABELS: Record<LeaveStatus, { label: string; emoji: st
   approved: { label: 'Đã duyệt', emoji: '✅', color: '#16A34A', bgColor: 'rgba(22, 163, 74, 0.1)' },
   rejected: { label: 'Từ chối', emoji: '❌', color: '#DC2626', bgColor: 'rgba(220, 38, 38, 0.1)' },
 };
+
+
+/* ============================================
+   Salary Types (Phase 6 — Stream C)
+   Matches /api/salary response
+   ============================================ */
+
+/** Salary breakdown data */
+export interface SalaryData {
+  basic_salary: number;
+  ot_minutes: number;
+  ot_allowance: number;
+  late_count: number;
+  late_total_minutes: number;
+  late_deductions: number;
+  unpaid_leave_days: number;
+  unpaid_leave_deduction: number;
+  net_salary: number;
+  working_days: number;
+  status: 'estimated' | 'confirmed';
+}
+
+/** GET /api/salary response */
+export interface SalaryResponse {
+  ok: boolean;
+  month: string;
+  salary: SalaryData;
+}

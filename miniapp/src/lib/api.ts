@@ -13,6 +13,7 @@ import type {
   MyLeavesResponse,
   LeaveFormData,
   SubmitLeaveResponse,
+  SalaryResponse,
 } from '../types';
 
 /** Base URL — cùng domain trên Vercel */
@@ -209,4 +210,21 @@ export function submitLeaveRequest(
     method: 'POST',
     body: JSON.stringify(data),
   });
+}
+
+/* ============================================
+   Salary API (Stream C — Phase 6)
+   ============================================ */
+
+/**
+ * GET /api/salary — Lấy salary summary tháng
+ */
+export function fetchSalary(
+  initData: string,
+  month: string,
+): Promise<SalaryResponse> {
+  return apiFetch<SalaryResponse>(
+    `/salary?month=${month}`,
+    initData,
+  );
 }

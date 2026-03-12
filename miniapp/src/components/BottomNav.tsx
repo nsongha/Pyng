@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/', label: 'Dashboard', emoji: '📊' },
   { path: '/charts', label: 'Thống kê', emoji: '📈' },
   { path: '/leave', label: 'Nghỉ phép', emoji: '📋' },
+  { path: '/salary', label: 'Lương', emoji: '💰' },
 ];
 
 export function BottomNav() {
