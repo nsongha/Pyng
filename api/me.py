@@ -102,9 +102,24 @@ def _get_checkin_stats_this_month(user_id: int) -> dict:
 class handler(BaseHTTPRequestHandler):
     """Vercel serverless handler — GET /api/me."""
 
-    @require_auth
     def do_GET(self):
+        """Route: debug mode hoặc normal auth flow."""
+        from urllib.parse import urlparse, parse_qs as _parse_qs
+        parsed = urlparse(self.path)
+        qs = _parse_qs(parsed.query)
+
+        if qs.get("debug"):
+            return self._handle_debug()
+
+        if qs.get("auth_debug"):
+            return self._handle_auth_debug()
+
+        return self._handle_me()
+
+    @require_auth
+    def _handle_me(self):
         """Trả về user dashboard data."""
+
         telegram_id = None
         try:
             telegram_id = self._telegram_user["id"]
@@ -156,6 +171,76 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             logger.exception("GET /api/me error — telegram_id=%s", telegram_id)
             json_api_response(self, 500, {"ok": False, "error": f"Internal error: {type(e).__name__}"})
+
+    def _handle_debug(self):
+        """Debug endpoint tạm thời — test DB calls."""
+        import traceback
+        results = {}
+
+        try:
+            # Test 1: Users
+            try:
+                users = db.select("users", columns="id,telegram_id,full_name", limit=1)
+                results["users"] = {"ok": True, "count": len(users), "sample": users[:1]}
+            except Exception as e:
+                results["users"] = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+
+            # Test 2: Checkins (without is_ontime!)
+            try:
+                tz = get_tz()
+                now = datetime.now(tz)
+                start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                checkins = db.select(
+                    "checkins", columns="id,method,checked_at,type",
+                    filters={"type": "in", "checked_at.gte": start.isoformat()},
+                    limit=2,
+                )
+                results["checkins"] = {"ok": True, "count": len(checkins)}
+            except Exception as e:
+                results["checkins"] = {"ok": False, "error": f"{type(e).__name__}: {e}", "tb": traceback.format_exc()[-300:]}
+
+            # Test 3: Leaves
+            try:
+                leaves = db.select("leaves", columns="id,user_id,days_count,status", limit=2)
+                results["leaves"] = {"ok": True, "count": len(leaves)}
+            except Exception as e:
+                results["leaves"] = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+
+            # Test 4: Gamification
+            try:
+                gami = db.select("gamification", columns="id,user_id,total_points", limit=2)
+                results["gamification"] = {"ok": True, "count": len(gami)}
+            except Exception as e:
+                results["gamification"] = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+
+            # Test 5: Full /api/me flow for first user
+            if results.get("users", {}).get("ok") and results["users"]["sample"]:
+                uid = results["users"]["sample"][0]["id"]
+                try:
+                    stats = _get_checkin_stats_this_month(uid)
+                    results["checkin_stats"] = {"ok": True, "data": stats}
+                except Exception as e:
+                    results["checkin_stats"] = {"ok": False, "error": f"{type(e).__name__}: {e}", "tb": traceback.format_exc()[-300:]}
+                try:
+                    balance = get_remaining_leave_days(uid)
+                    results["leave_balance"] = {"ok": True, "data": balance}
+                except Exception as e:
+                    results["leave_balance"] = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+                try:
+                    gstats = get_user_stats(uid)
+                    results["user_stats"] = {"ok": True, "data": gstats}
+                except Exception as e:
+                    results["user_stats"] = {"ok": False, "error": f"{type(e).__name__}: {e}", "tb": traceback.format_exc()[-300:]}
+
+        except Exception as e:
+            results["init"] = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+
+        import json as _json
+        body = _json.dumps(results, default=str, ensure_ascii=False).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(body)
 
     def do_OPTIONS(self):
         """CORS preflight."""

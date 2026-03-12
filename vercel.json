@@ -18,7 +18,9 @@
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Content-Security-Policy", "value": "default-src 'self'" },
+        { "key": "Access-Control-Allow-Origin", "value": "https://pyng.vercel.app" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, X-Telegram-Init-Data" },
         { "key": "X-Content-Type-Options", "value": "nosniff" }
       ]
     },

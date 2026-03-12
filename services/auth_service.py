@@ -190,7 +190,10 @@ def json_api_response(
     status: int,
     data: dict,
 ) -> None:
-    """Gửi JSON response với CORS headers cho Mini App API.
+    """Gửi JSON response cho Mini App API.
+
+    CORS headers được set ở vercel.json level (edge).
+    Không set ở đây để tránh duplicate headers trong body.
 
     Args:
         handler: BaseHTTPRequestHandler instance.
@@ -200,9 +203,6 @@ def json_api_response(
     body = json.dumps(data, default=str, ensure_ascii=False).encode("utf-8")
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json")
-    handler.send_header("Access-Control-Allow-Origin", _get_cors_origin())
-    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-    handler.send_header("Access-Control-Allow-Headers", "Content-Type, X-Telegram-Init-Data")
     handler.end_headers()
     handler.wfile.write(body)
 
@@ -210,14 +210,13 @@ def json_api_response(
 def handle_cors_preflight(handler: BaseHTTPRequestHandler) -> None:
     """Handle CORS preflight request (OPTIONS).
 
+    CORS headers được set ở vercel.json level (edge).
+    Function chỉ trả 204 No Content.
+
     Args:
         handler: BaseHTTPRequestHandler instance.
     """
     handler.send_response(204)
-    handler.send_header("Access-Control-Allow-Origin", _get_cors_origin())
-    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-    handler.send_header("Access-Control-Allow-Headers", "Content-Type, X-Telegram-Init-Data")
-    handler.send_header("Access-Control-Max-Age", "86400")
     handler.end_headers()
 
 
