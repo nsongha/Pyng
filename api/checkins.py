@@ -68,12 +68,17 @@ def _get_checkin_history(user_id: int, limit: int, offset: int) -> list[dict]:
         )
         rows = all_rows[offset:]
 
+    # Chỉ fetch checkouts trong 90 ngày gần nhất (đủ pair với 30 check-ins gần nhất)
+    tz = get_tz()
+    cutoff_date = (datetime.now(tz) - timedelta(days=90)).isoformat()
+
     checkout_rows = db.select(
         "checkins",
         columns="checked_at,type",
         filters={
             "user_id": user_id,
             "type": "out",
+            "checked_at.gte": cutoff_date,
         },
         order="checked_at.desc",
     )
@@ -132,7 +137,7 @@ def _handle_checkins_list(handler_self) -> None:
                 "offset": offset,
                 "count": len(records),
             },
-        })
+        }, cache_seconds=60)
 
     except Exception as e:
         logger.exception("GET /api/checkins error — telegram_id=%s", telegram_id)
@@ -401,7 +406,7 @@ def _handle_chart_data(handler_self) -> None:
             "ok": True,
             "month": f"{year}-{month:02d}",
             **chart_data,
-        })
+        }, cache_seconds=300)
 
     except Exception as e:
         logger.exception(

@@ -191,6 +191,8 @@ def json_api_response(
     handler: BaseHTTPRequestHandler,
     status: int,
     data: dict,
+    *,
+    cache_seconds: int = 0,
 ) -> None:
     """Gửi JSON response cho Mini App API.
 
@@ -201,10 +203,16 @@ def json_api_response(
         handler: BaseHTTPRequestHandler instance.
         status: HTTP status code.
         data: Dict sẽ serialize thành JSON.
+        cache_seconds: Nếu > 0, set Cache-Control cho Vercel edge cache.
     """
     body = json.dumps(data, default=str, ensure_ascii=False).encode("utf-8")
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json")
+    if cache_seconds > 0 and 200 <= status < 300:
+        handler.send_header(
+            "Cache-Control",
+            f"s-maxage={cache_seconds}, stale-while-revalidate=300",
+        )
     handler.end_headers()
     handler.wfile.write(body)
 

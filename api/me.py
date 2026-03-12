@@ -151,7 +151,7 @@ class handler(BaseHTTPRequestHandler):
                 "gamification": gami_stats,
                 "checkin_stats": checkin_stats,
                 "leave_balance": leave_balance,
-            })
+            }, cache_seconds=60)
 
         except Exception as e:
             logger.exception("GET /api/me error — telegram_id=%s", telegram_id)

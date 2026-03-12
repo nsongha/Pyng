@@ -3,10 +3,8 @@
    Stats + Gamification + Check-in History
    ============================================ */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTelegramContext } from '../contexts/TelegramContext';
-import { fetchCheckins } from '../lib/api';
-import type { CheckinRecord } from '../types';
 import { StatsCard } from '../components/StatsCard';
 import { GamificationCard } from '../components/GamificationCard';
 import { CheckinHistoryList } from '../components/CheckinHistoryList';
@@ -19,39 +17,18 @@ import { ErrorState } from '../components/ErrorState';
 import { EmptyState } from '../components/EmptyState';
 
 export function Dashboard() {
-  const { user, initData, profile, isLoading, error, refreshProfile } =
+  const { user, profile, checkins, isLoading, checkinsLoading, error, refreshProfile } =
     useTelegramContext();
-
-  const [checkins, setCheckins] = useState<CheckinRecord[]>([]);
-  const [checkinsLoading, setCheckinsLoading] = useState(true);
 
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Load check-in history
-  const loadCheckins = useCallback(async () => {
-    if (!initData) return;
-    try {
-      setCheckinsLoading(true);
-      const data = await fetchCheckins(initData, 30, 0);
-      setCheckins(data.data);
-    } catch (err) {
-      console.error('[Dashboard] Failed to load checkins:', err);
-    } finally {
-      setCheckinsLoading(false);
-    }
-  }, [initData]);
-
-  useEffect(() => {
-    loadCheckins();
-  }, [loadCheckins]);
-
   // Pull-to-refresh handler
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([refreshProfile(), loadCheckins()]);
+      await refreshProfile();
     } finally {
       setIsRefreshing(false);
     }
