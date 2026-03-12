@@ -17,6 +17,10 @@
 
 ### feat
 
+- **Phase 6 — Salary Integration** (Stream C):
+  - `services/salary_service.py` — Tính lương tháng: basic + OT allowance - late deductions - unpaid leave. Config từ `system_config` table
+  - `api/salary.py` — GET `/api/salary?month=YYYY-MM` (monthly salary summary, auth + CORS)
+
 - **Phase 5 — Backend Enhancement** (Stream A):
   - `services/overtime_service.py` — Overtime tracking: 30 phút grace sau WORK_END, cap 4h/ngày
   - `services/report_service.py` — Custom date range Excel export (max 90 ngày)

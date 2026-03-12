@@ -165,6 +165,7 @@ GitHub Actions (Cron)
 - `services/gamification_service.py` — Points, streak, leaderboard, user stats (Phase 4)
 - `services/mood_service.py` — Mood tracking, burnout detection, mood stats (Phase 4)
 - `services/auth_service.py` — Telegram initData HMAC-SHA256 validation, API auth (Phase 4)
+- `services/salary_service.py` — Salary calculation: basic + OT - late deductions - unpaid leave (Phase 6)
 
 ### Database (`db/`)
 
@@ -209,6 +210,7 @@ GitHub Actions (Cron)
 | GET    | `/api/me`          | User info + gamification + stats   |
 | GET    | `/api/checkins`    | Paginated check-in history         |
 | GET    | `/api/leaderboard` | Top 10 + user rank (month/alltime) |
+| GET    | `/api/salary`      | Monthly salary summary (Phase 6)   |
 
 ## 10. Tính năng nổi bật
 
