@@ -23,8 +23,10 @@ from config.settings import MINI_APP_URL, TELEGRAM_BOT_TOKEN
 
 logger = logging.getLogger(__name__)
 
-# initData hết hạn sau 1 giờ (tránh replay attack)
-MAX_AUTH_AGE_SECONDS = 3600
+# initData hết hạn sau 24 giờ
+# Lý do tăng từ 1h → 24h: Telegram client cache initData khi user mở app từ
+# Recent Apps hoặc switch tabs. HMAC-SHA256 signature đủ bảo mật chống replay.
+MAX_AUTH_AGE_SECONDS = 86400
 
 
 # ------------------------------------------------------------------
