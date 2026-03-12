@@ -356,3 +356,121 @@ def get_salary_report(month: int, year: int) -> dict:
         "users": users_salary,
         "grand_total": grand_total,
     }
+
+
+# ------------------------------------------------------------------
+# Excel Export
+# ------------------------------------------------------------------
+
+def generate_salary_excel(month: int, year: int) -> bytes:
+    """Tạo Excel bảng lương tháng.
+
+    Sheet 1 — Tổng hợp: STT, Họ tên, Lương cơ bản, OT, Trừ muộn, Nghỉ KL, Lương ròng
+    Sheet 2 — Chi tiết: breakdown per user (OT sessions, late days, unpaid days)
+
+    Args:
+        month: Tháng (1-12).
+        year: Năm.
+
+    Returns:
+        bytes: Excel file content (xlsx).
+    """
+    import io
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill, numbers
+
+    report = get_salary_report(month, year)
+    wb = Workbook()
+
+    # ── Styles ──
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    total_font = Font(bold=True, size=11)
+    vnd_format = '#,##0'
+
+    # ── Sheet 1: Tổng hợp ──
+    ws = wb.active
+    ws.title = "Tổng hợp lương"
+
+    # Title
+    ws.merge_cells("A1:G1")
+    title_cell = ws.cell(row=1, column=1, value=f"BẢNG LƯƠNG THÁNG {month:02d}/{year}")
+    title_cell.font = Font(bold=True, size=14)
+    title_cell.alignment = Alignment(horizontal="center")
+
+    # Info row
+    ws.cell(row=2, column=1, value=f"Ngày làm việc: {report['working_days']} ngày")
+    ws.cell(row=2, column=4, value=f"Tổng NV: {len(report['users'])}")
+
+    # Headers
+    headers = ["STT", "Họ tên", "Lương cơ bản", "Phụ cấp OT", "Trừ muộn", "Trừ nghỉ KL", "Lương ròng"]
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=4, column=col_idx, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+
+    # Data
+    for stt, user_data in enumerate(report["users"], 1):
+        row = stt + 4
+        ws.cell(row=row, column=1, value=stt)
+        ws.cell(row=row, column=2, value=user_data["full_name"])
+
+        for col, key in [(3, "basic_salary"), (4, "ot_allowance"),
+                         (5, "late_deductions"), (6, "unpaid_leave_deduction"),
+                         (7, "net_salary")]:
+            cell = ws.cell(row=row, column=col, value=user_data[key])
+            cell.number_format = vnd_format
+
+    # Total row
+    total_row = len(report["users"]) + 5
+    ws.cell(row=total_row, column=2, value="TỔNG CỘNG").font = total_font
+    total_cell = ws.cell(row=total_row, column=7, value=report["grand_total"])
+    total_cell.font = total_font
+    total_cell.number_format = vnd_format
+
+    # Column widths
+    ws.column_dimensions["A"].width = 6
+    ws.column_dimensions["B"].width = 25
+    for col_letter in ["C", "D", "E", "F", "G"]:
+        ws.column_dimensions[col_letter].width = 18
+
+    # ── Sheet 2: Chi tiết ──
+    ws2 = wb.create_sheet("Chi tiết")
+
+    detail_headers = [
+        "Họ tên", "Lương cơ bản",
+        "OT (phút)", "OT (tiền)",
+        "Muộn (lần)", "Muộn (phút)", "Trừ muộn",
+        "Nghỉ KL (ngày)", "Trừ nghỉ KL",
+        "Lương ròng",
+    ]
+    for col_idx, header in enumerate(detail_headers, 1):
+        cell = ws2.cell(row=1, column=col_idx, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+
+    for idx, user_data in enumerate(report["users"]):
+        row = idx + 2
+        ws2.cell(row=row, column=1, value=user_data["full_name"])
+        ws2.cell(row=row, column=2, value=user_data["basic_salary"]).number_format = vnd_format
+        ws2.cell(row=row, column=3, value=user_data["ot_minutes"])
+        ws2.cell(row=row, column=4, value=user_data["ot_allowance"]).number_format = vnd_format
+        ws2.cell(row=row, column=5, value=user_data["late_count"])
+        ws2.cell(row=row, column=6, value=user_data["late_total_minutes"])
+        ws2.cell(row=row, column=7, value=user_data["late_deductions"]).number_format = vnd_format
+        ws2.cell(row=row, column=8, value=user_data["unpaid_leave_days"])
+        ws2.cell(row=row, column=9, value=user_data["unpaid_leave_deduction"]).number_format = vnd_format
+        ws2.cell(row=row, column=10, value=user_data["net_salary"]).number_format = vnd_format
+
+    # Auto-fit
+    ws2.column_dimensions["A"].width = 25
+    for col_letter in ["B", "C", "D", "E", "F", "G", "H", "I", "J"]:
+        ws2.column_dimensions[col_letter].width = 16
+
+    # Save
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+

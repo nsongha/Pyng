@@ -215,10 +215,10 @@ Week 1          Week 2          Week 3          Week 4
 
 ### Wave 3: Tích hợp phần mềm lương (High) — 1 tuần
 
-- [ ] Thiết kế salary calculation logic (basic salary + OT + deductions)
-- [ ] API endpoint: GET `/api/salary` (monthly salary summary)
+- [x] Thiết kế salary calculation logic (basic salary + OT + deductions)
+- [x] API endpoint: GET `/api/salary` (monthly salary summary)
 - [ ] Mini App: trang Lương hoặc tab trong Dashboard
-- [ ] Tích hợp dữ liệu check-in + OT + nghỉ phép vào tính lương
+- [x] Tích hợp dữ liệu check-in + OT + nghỉ phép vào tính lương
 - [ ] Export bảng lương (Excel)
 
 ### Backlog (dời sang Phase 7+)
