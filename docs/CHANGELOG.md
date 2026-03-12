@@ -7,7 +7,17 @@
 
 ## [Unreleased]
 
-### fix
+### feat
+
+- **Phase 6 — Mini App Polish** (Stream B):
+  - `ErrorState.tsx` — Reusable error component: phân biệt auth/404/server/network error + icon + nút Thử lại
+  - `EmptyState.tsx` — Reusable empty state component: illustration + hướng dẫn cho first-time users
+  - `Toast.tsx` — Slide-in notification component (info/warning/error/success)
+  - `useNetworkStatus.ts` — Hook detect online/offline + auto reconnect callback
+  - Named skeleton components: `ChartSkeleton`, `StatsSummarySkeleton`, `LeaveBalanceSkeleton`, `LeaveListItemsSkeleton`
+  - Offline detection: Toast "Không có kết nối" + "Đã kết nối lại!"
+  - Dark mode: shimmer GPU acceleration, dark gradient, `LEAVE_STATUS_LABELS` CSS values
+  - Cải thiện `PyngApiError`: `isAuthError()`, `isNotFound()`, `isServerError()`, `isNetworkError()`
 
 - **Phase 6 — Stabilize & Fix API** (Stream A):
   - `services/auth_service.py` — Bỏ CORS headers khỏi Python function body (fix JSON parse error trên Vercel)

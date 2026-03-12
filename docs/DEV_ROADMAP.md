@@ -205,13 +205,13 @@ Week 1          Week 2          Week 3          Week 4
 - [x] Bỏ CSP `default-src 'self'` trên API routes
 - [x] Verify 3 trang Mini App (Dashboard, Thống kê, Nghỉ phép) hoạt động trên production
 
-### Wave 2: Mini App Polish (P1) — 1 ngày
+### Wave 2: Mini App Polish (P1) — ✅ (Hoàn thành 2026-03-12)
 
-- [ ] Error handling: hiển thị lỗi cụ thể thay vì generic "HTTP 500"
-- [ ] Empty states: UI đẹp hơn khi chưa có data (first-time user)
-- [ ] Loading states / skeleton consistent cả 3 trang
-- [ ] Offline fallback / retry logic cải thiện
-- [ ] Dark/light mode test trên Telegram
+- [x] Error handling: hiển thị lỗi cụ thể thay vì generic "HTTP 500"
+- [x] Empty states: UI đẹp hơn khi chưa có data (first-time user)
+- [x] Loading states / skeleton consistent cả 3 trang
+- [x] Offline fallback / retry logic cải thiện
+- [x] Dark/light mode test trên Telegram
 
 ### Wave 3: Tích hợp phần mềm lương (High) — 1 tuần
 
