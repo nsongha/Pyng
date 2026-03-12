@@ -30,6 +30,10 @@
 - **Phase 6 — Salary Integration** (Stream C):
   - `services/salary_service.py` — Tính lương tháng: basic + OT allowance - late deductions - unpaid leave. Config từ `system_config` table
   - `api/salary.py` — GET `/api/salary?month=YYYY-MM` (monthly salary summary, auth + CORS)
+  - `miniapp/src/pages/Salary.tsx` — Salary breakdown page: hero card (net salary), income/deduction sections, stats
+  - `miniapp/src/components/BottomNav.tsx` — Thêm tab "Lương" (4 tabs)
+  - `miniapp/src/lib/api.ts` — `fetchSalary()` API client
+  - `miniapp/src/types/index.ts` — `SalaryData`, `SalaryResponse` types
 
 - **Phase 5 — Backend Enhancement** (Stream A):
   - `services/overtime_service.py` — Overtime tracking: 30 phút grace sau WORK_END, cap 4h/ngày
