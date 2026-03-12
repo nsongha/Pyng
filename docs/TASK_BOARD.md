@@ -136,16 +136,16 @@ Lỗi PostgREST filter `start_date.gte` / `start_date.lt` trả lỗi pattern kh
 | C1 | Salary calculation service | P0 | ✅ | Tạo `services/salary_service.py`: tính lương = basic + OT allowance - late deductions - unpaid leave. Config trong `system_config` table. |
 | C2 | Salary API endpoint | P0 | ✅ | Tạo `api/salary.py`: GET `/api/salary?month=YYYY-MM` → monthly salary summary. Auth + CORS. |
 | C3 | Mini App: Salary page/tab | P1 | ✅ | Tạo component Salary trong Mini App: monthly view, breakdown (basic, OT, deductions), status badge. |
-| C4 | Salary Excel export | P2 | 📋 | API endpoint export salary as Excel (for admin/HR). |
+| C4 | Salary Excel export | P2 | ✅ | API endpoint export salary as Excel (for admin/HR). |
 | C5 | Wire salary into Mini App | P1 | ✅ | Thêm route + nav + API client. Integrate salary page vào app flow. Seed salary config data. |
 
 ### Acceptance Criteria — Stream C
 
-- [ ] `salary_service.py` tính đúng: basic_salary + (OT_minutes / 60 * OT_rate) - (late_deductions) - (unpaid_leave * daily_rate)
-- [ ] `GET /api/salary` trả response format chuẩn với breakdown chi tiết
-- [ ] Salary page render đúng tháng, hiển thị breakdown, tổng lương
-- [ ] Admin export Excel bảng lương tháng
-- [ ] Salary tab xuất hiện trên Bottom Nav, navigate smooth
+- [x] `salary_service.py` tính đúng: basic_salary + (OT_minutes / 60 * OT_rate) - (late_deductions) - (unpaid_leave * daily_rate)
+- [x] `GET /api/salary` trả response format chuẩn với breakdown chi tiết
+- [x] Salary page render đúng tháng, hiển thị breakdown, tổng lương
+- [x] Admin export Excel bảng lương tháng
+- [x] Salary tab xuất hiện trên Bottom Nav, navigate smooth
 
 ---
 
@@ -196,8 +196,8 @@ Lỗi PostgREST filter `start_date.gte` / `start_date.lt` trả lỗi pattern kh
 | ------ | ----- | ---- | ----------- | ------- | - |
 | 🔧 A — Fix API & Auth | 5 | 5 | 0 | 0 | 100% |
 | 🎨 B — Mini App Polish | 5 | 5 | 0 | 0 | 100% |
-| 💰 C — Salary Integration | 5 | 4 | 0 | 0 | 80% |
-| **Tổng** | **15** | **14** | **0** | **0** | **93%** |
+| 💰 C — Salary Integration | 5 | 5 | 0 | 0 | 100% |
+| **Tổng** | **15** | **15** | **0** | **0** | **100%** |
 
 ---
 

@@ -150,6 +150,8 @@ GitHub Actions (Cron)
 - `api/me.py` — GET /api/me — User dashboard data (info + gamification + stats) (Phase 4)
 - `api/checkins.py` — GET /api/checkins — Paginated check-in history (Phase 4)
 - `api/leaderboard.py` — GET /api/leaderboard — Top 10 + user rank (Phase 4)
+- `api/salary/index.py` — GET /api/salary — Monthly salary summary + breakdown (Phase 6)
+- `api/salary/export.py` — GET /api/salary/export — Excel bảng lương (admin only) (Phase 6)
 
 ### Services (`services/`)
 
@@ -211,6 +213,7 @@ GitHub Actions (Cron)
 | GET    | `/api/checkins`    | Paginated check-in history         |
 | GET    | `/api/leaderboard` | Top 10 + user rank (month/alltime) |
 | GET    | `/api/salary`      | Monthly salary summary + breakdown |
+| GET    | `/api/salary/export` | Excel bảng lương (admin only)    |
 
 ## 10. Tính năng nổi bật
 
@@ -223,8 +226,8 @@ GitHub Actions (Cron)
 
 ## 11. Trạng thái dự án
 
-- **Version**: 0.5.0 (Unreleased)
-- **Phase**: Phase 5 — Enhancement (hoàn thành)
+- **Version**: 0.6.0 (Unreleased)
+- **Phase**: Phase 6 — Stabilize & Salary (hoàn thành)
 - **Target go-live**: 4 tuần từ kick-off
 - **Team size**: 1–2 devs
 
@@ -236,10 +239,12 @@ GitHub Actions (Cron)
 - Phase 2: QR System, NFC System, Manual Fallback — 4 phương thức check-in hoạt động
 - Phase 3: Admin Panel (/admin), Leave Management (/leave, /phep), Reports (/report, cron daily)
 - Phase 4: Gamification (points, streak, leaderboard), Mood tracking, Mini App dashboard, API endpoints, Weekly cron
+- Phase 5: Enhancement — Charts, Leave form, OT tracking, export mở rộng, fix tech debt
+- Phase 6: Stabilize & Salary — Fix API 500, polish miniapp UX (error/empty/loading/offline/dark mode), salary calculation + export
 
 ### Next milestone
 
-- Phase 6: Stabilize & Salary (Fix API 500, polish miniapp UX, tích hợp tính lương)
+- Phase 7+: Face verification, Google Calendar sync, Slack/Notion integration, multi-office nâng cao
 
 → Lộ trình chi tiết: [DEV_ROADMAP.md](./DEV_ROADMAP.md)
 

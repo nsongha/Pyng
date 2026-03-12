@@ -192,7 +192,7 @@ Week 1          Week 2          Week 3          Week 4
 
 ---
 
-## Phase 6 — Stabilize & Salary (Đang thực hiện)
+## Phase 6 — Stabilize & Salary ✅ (Hoàn thành 2026-03-13)
 
 **Mục tiêu**: Fix API lỗi trên mini app, polish UX 3 trang hiện có, tích hợp tính lương
 
@@ -213,13 +213,13 @@ Week 1          Week 2          Week 3          Week 4
 - [x] Offline fallback / retry logic cải thiện
 - [x] Dark/light mode test trên Telegram
 
-### Wave 3: Tích hợp phần mềm lương (High) — 1 tuần
+### Wave 3: Tích hợp phần mềm lương (High) — ✅ (Hoàn thành 2026-03-13)
 
 - [x] Thiết kế salary calculation logic (basic salary + OT + deductions)
 - [x] API endpoint: GET `/api/salary` (monthly salary summary)
-- [ ] Mini App: trang Lương hoặc tab trong Dashboard
+- [x] Mini App: trang Lương (4 tab Bottom Nav)
 - [x] Tích hợp dữ liệu check-in + OT + nghỉ phép vào tính lương
-- [ ] Export bảng lương (Excel)
+- [x] Export bảng lương (Excel) — GET `/api/salary/export` (admin only)
 
 ### Backlog (dời sang Phase 7+)
 
@@ -231,7 +231,7 @@ Week 1          Week 2          Week 3          Week 4
 | Multi-office support nâng cao | Low     | 3 ngày |
 | Analytics dashboard nâng cao  | Low     | 3 ngày |
 
-**Done when**: 3 trang miniapp hoạt động đúng trên Telegram, tính lương cơ bản chạy được
+**Done when**: ~~3 trang miniapp hoạt động đúng trên Telegram, tính lương cơ bản chạy được~~ ✅ Done
 
 ---
 
