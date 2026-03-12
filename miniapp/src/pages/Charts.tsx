@@ -8,9 +8,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTelegramContext } from '../contexts/TelegramContext';
 import { fetchChartData, fetchOvertime } from '../lib/api';
 import type { ChartDataResponse, OvertimeResponse } from '../types';
+import { ChartSkeleton, StatsSummarySkeleton } from '../components/LoadingSkeleton';
 import { WorkingHoursChart } from '../components/charts/WorkingHoursChart';
 import { AttendanceDonut } from '../components/charts/AttendanceDonut';
 import { OvertimeCard } from '../components/OvertimeCard';
+import { ErrorState } from '../components/ErrorState';
+import { EmptyState } from '../components/EmptyState';
 
 /** Format YYYY-MM cho API */
 function formatMonth(date: Date): string {
@@ -147,31 +150,15 @@ export function Charts() {
         {/* Loading state */}
         {isLoading && (
           <div className="space-y-4">
-            <div className="skeleton h-[200px] rounded-2xl" />
-            <div className="grid grid-cols-3 gap-3">
-              <div className="skeleton h-16 rounded-xl" />
-              <div className="skeleton h-16 rounded-xl" />
-              <div className="skeleton h-16 rounded-xl" />
-            </div>
-            <div className="skeleton h-[160px] rounded-2xl" />
+            <ChartSkeleton />
+            <StatsSummarySkeleton />
+            <ChartSkeleton />
           </div>
         )}
 
         {/* Error state */}
         {error && !isLoading && (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="text-4xl mb-3">😵</div>
-            <p className="text-sm mb-4" style={{ color: 'var(--tg-hint)' }}>
-              {error}
-            </p>
-            <button
-              onClick={loadData}
-              className="px-5 py-2 rounded-full text-sm font-medium text-white"
-              style={{ backgroundColor: 'var(--color-brand)' }}
-            >
-              Thử lại
-            </button>
-          </div>
+          <ErrorState error={error} onRetry={loadData} />
         )}
 
         {/* Data loaded */}
@@ -179,15 +166,11 @@ export function Charts() {
           <>
             {/* Empty state */}
             {chartData.summary.total_days === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="text-4xl mb-3">📭</div>
-                <p
-                  className="text-sm"
-                  style={{ color: 'var(--tg-hint)' }}
-                >
-                  Chưa có dữ liệu cho {displayMonth(currentMonth)}
-                </p>
-              </div>
+              <EmptyState
+                icon="📊"
+                title={`Chưa có dữ liệu ${displayMonth(currentMonth)}`}
+                description="Hãy check-in đều đặn để xem biểu đồ giờ làm việc và thống kê chi tiết tại đây."
+              />
             ) : (
               <>
                 {/* Working Hours Chart */}

@@ -28,7 +28,7 @@ interface TelegramContextValue {
   /** Loading state for profile */
   isLoading: boolean;
   /** Error state */
-  error: string | null;
+  error: Error | string | null;
   /** Reload profile data */
   refreshProfile: () => Promise<void>;
 }
@@ -43,7 +43,7 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
   const telegram = useTelegram();
   const [profile, setProfile] = useState<MeResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | string | null>(null);
 
   const loadProfile = async () => {
     if (!telegram.initData) {
@@ -58,9 +58,12 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
       const data = await fetchMe(telegram.initData);
       setProfile(data);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Không thể tải dữ liệu';
-      setError(message);
+      // Giữ nguyên error object để ErrorState phân biệt loại lỗi
+      if (err instanceof Error) {
+        setError(err);
+      } else {
+        setError(String(err));
+      }
       console.error('[TelegramProvider] Failed to load profile:', err);
     } finally {
       setIsLoading(false);

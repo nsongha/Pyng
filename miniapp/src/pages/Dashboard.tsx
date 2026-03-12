@@ -15,6 +15,8 @@ import {
   GamificationCardSkeleton,
   HistoryListSkeleton,
 } from '../components/LoadingSkeleton';
+import { ErrorState } from '../components/ErrorState';
+import { EmptyState } from '../components/EmptyState';
 
 export function Dashboard() {
   const { user, initData, profile, isLoading, error, refreshProfile } =
@@ -90,24 +92,8 @@ export function Dashboard() {
   // Error state
   if (error && !isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
-        <div className="text-5xl mb-4">😵</div>
-        <h2
-          className="text-lg font-semibold mb-2"
-          style={{ color: 'var(--tg-text)' }}
-        >
-          Không thể tải dữ liệu
-        </h2>
-        <p className="text-sm mb-6" style={{ color: 'var(--tg-hint)' }}>
-          {error}
-        </p>
-        <button
-          onClick={handleRefresh}
-          className="px-6 py-2.5 rounded-full text-sm font-medium text-white"
-          style={{ backgroundColor: 'var(--color-brand)' }}
-        >
-          Thử lại
-        </button>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--tg-bg)' }}>
+        <ErrorState error={error} onRetry={handleRefresh} />
       </div>
     );
   }
@@ -249,6 +235,12 @@ export function Dashboard() {
           </h2>
           {checkinsLoading ? (
             <HistoryListSkeleton />
+          ) : checkins.length === 0 ? (
+            <EmptyState
+              icon="📋"
+              title="Chưa có lịch sử check-in"
+              description="Hãy check-in bằng GPS, WiFi, QR hoặc NFC qua bot Telegram để bắt đầu!"
+            />
           ) : (
             <CheckinHistoryList records={checkins} />
           )}

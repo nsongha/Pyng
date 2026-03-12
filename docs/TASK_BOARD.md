@@ -109,19 +109,19 @@ Lỗi PostgREST filter `start_date.gte` / `start_date.lt` trả lỗi pattern kh
 
 | #  | Task | Priority | Status | Description |
 | -- | ---- | -------- | ------ | ----------- |
-| B1 | Error handling cụ thể | P1 | 📋 | Hiển thị error message từ API thay vì generic "HTTP 500". Phân biệt 401 (auth)/404 (not found)/500 (server error). Retry button. |
-| B2 | Empty states UI | P1 | 📋 | UI đẹp khi chưa có data (first-time user): no checkins, no leaves, no chart data. Illustrations + hướng dẫn. |
-| B3 | Loading skeleton nhất quán | P2 | 📋 | Verify skeleton components render đúng kích thước trên cả 3 trang. Fix nếu shimmer animation bị giật. |
-| B4 | Offline fallback & retry | P2 | 📋 | Detect offline state, show Toast. Retry logic với exponential backoff. Cache last successful response. |
-| B5 | Dark/light mode test | P2 | 📋 | Verify Telegram theme vars (`--tg-*`) work cả dark và light theme. Fix contrast issues. |
+| B1 | Error handling cụ thể | P1 | ✅ | Hiển thị error message từ API thay vì generic "HTTP 500". Phân biệt 401 (auth)/404 (not found)/500 (server error). Retry button. |
+| B2 | Empty states UI | P1 | ✅ | UI đẹp khi chưa có data (first-time user): no checkins, no leaves, no chart data. Illustrations + hướng dẫn. |
+| B3 | Loading skeleton nhất quán | P2 | ✅ | Verify skeleton components render đúng kích thước trên cả 3 trang. Fix nếu shimmer animation bị giật. |
+| B4 | Offline fallback & retry | P2 | ✅ | Detect offline state, show Toast. Retry logic với exponential backoff. Cache last successful response. |
+| B5 | Dark/light mode test | P2 | ✅ | Verify Telegram theme vars (`--tg-*`) work cả dark và light theme. Fix contrast issues. |
 
 ### Acceptance Criteria — Stream B
 
-- [ ] Error state hiển thị icon + message cụ thể + nút "Thử lại" trên cả 3 trang
-- [ ] Empty state hiển thị illustration hướng dẫn thay vì blank/loading vĩnh viễn
-- [ ] Skeleton loading smooth, không giật khi chuyển trang
-- [ ] Khi offline: Toast "Không có kết nối" + auto retry khi có mạng lại
-- [ ] Dark mode: text đọc được, contrast đủ, không có element bị "biến mất"
+- [x] Error state hiển thị icon + message cụ thể + nút "Thử lại" trên cả 3 trang
+- [x] Empty state hiển thị illustration hướng dẫn thay vì blank/loading vĩnh viễn
+- [x] Skeleton loading smooth, không giật khi chuyển trang
+- [x] Khi offline: Toast "Không có kết nối" + auto retry khi có mạng lại
+- [x] Dark mode: text đọc được, contrast đủ, không có element bị "biến mất"
 
 ---
 
@@ -195,9 +195,9 @@ Lỗi PostgREST filter `start_date.gte` / `start_date.lt` trả lỗi pattern kh
 | Stream | Total | Done | In Progress | Blocked | % |
 | ------ | ----- | ---- | ----------- | ------- | - |
 | 🔧 A — Fix API & Auth | 5 | 5 | 0 | 0 | 100% |
-| 🎨 B — Mini App Polish | 5 | 0 | 0 | 0 | 0% |
+| 🎨 B — Mini App Polish | 5 | 5 | 0 | 0 | 100% |
 | 💰 C — Salary Integration | 5 | 2 | 0 | 0 | 40% |
-| **Tổng** | **15** | **7** | **0** | **0** | **47%** |
+| **Tổng** | **15** | **12** | **0** | **0** | **80%** |
 
 ---
 

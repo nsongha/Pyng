@@ -249,7 +249,7 @@ export const LEAVE_TYPE_LABELS: Record<LeaveType, { label: string; emoji: string
 
 /** Leave status display config */
 export const LEAVE_STATUS_LABELS: Record<LeaveStatus, { label: string; emoji: string; color: string; bgColor: string }> = {
-  pending: { label: 'Chờ duyệt', emoji: '🟡', color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
-  approved: { label: 'Đã duyệt', emoji: '✅', color: 'text-green-600', bgColor: 'bg-green-50' },
-  rejected: { label: 'Từ chối', emoji: '❌', color: 'text-red-600', bgColor: 'bg-red-50' },
+  pending: { label: 'Chờ duyệt', emoji: '🟡', color: '#CA8A04', bgColor: 'rgba(202, 138, 4, 0.1)' },
+  approved: { label: 'Đã duyệt', emoji: '✅', color: '#16A34A', bgColor: 'rgba(22, 163, 74, 0.1)' },
+  rejected: { label: 'Từ chối', emoji: '❌', color: '#DC2626', bgColor: 'rgba(220, 38, 38, 0.1)' },
 };

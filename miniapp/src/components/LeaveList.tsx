@@ -6,6 +6,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { LeaveRequest } from '../types';
 import { LEAVE_TYPE_LABELS, LEAVE_STATUS_LABELS } from '../types';
+import { EmptyState } from './EmptyState';
 
 interface LeaveListProps {
   /** Leave requests data */
@@ -97,18 +98,11 @@ export function LeaveList({ leaves, isLoading, onRefresh }: LeaveListProps) {
   // Empty state
   if (leaves.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 gap-3">
-        <div className="text-5xl">📭</div>
-        <p
-          className="text-base font-medium"
-          style={{ color: 'var(--tg-text)' }}
-        >
-          Chưa có đơn nghỉ nào
-        </p>
-        <p className="text-sm" style={{ color: 'var(--tg-hint)' }}>
-          Nhấn tab "Xin nghỉ" để tạo đơn mới
-        </p>
-      </div>
+      <EmptyState
+        icon="📭"
+        title="Chưa có đơn nghỉ nào"
+        description='Nhấn tab "➕ Xin nghỉ" để tạo đơn xin nghỉ phép mới.'
+      />
     );
   }
 
@@ -167,7 +161,7 @@ export function LeaveList({ leaves, isLoading, onRefresh }: LeaveListProps) {
                 className="text-xs font-medium px-2 py-0.5 rounded-full"
                 style={{
                   backgroundColor: statusConfig.bgColor,
-                  color: statusConfig.color.replace('text-', ''),
+                  color: statusConfig.color,
                 }}
               >
                 {statusConfig.emoji} {statusConfig.label}

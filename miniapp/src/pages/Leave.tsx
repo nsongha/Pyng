@@ -10,6 +10,7 @@ import { fetchMyLeaves } from '../lib/api';
 import type { LeaveRequest, LeaveBalance } from '../types';
 import { LeaveForm } from '../components/LeaveForm';
 import { LeaveList } from '../components/LeaveList';
+import { ErrorState } from '../components/ErrorState';
 
 type Tab = 'list' | 'form';
 
@@ -167,20 +168,7 @@ export function Leave() {
 
       {/* Error State */}
       {error && (
-        <div
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
-          style={{ backgroundColor: '#FFEBEE', color: '#C62828' }}
-        >
-          <span>❌</span>
-          <span>{error}</span>
-          <button
-            type="button"
-            onClick={loadData}
-            className="ml-auto text-xs underline"
-          >
-            Thử lại
-          </button>
-        </div>
+        <ErrorState error={error} onRetry={loadData} />
       )}
 
       {/* Tab Content */}

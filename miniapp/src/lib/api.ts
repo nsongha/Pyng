@@ -29,6 +29,26 @@ export class PyngApiError extends Error {
     this.status = status;
     this.detail = detail;
   }
+
+  /** 401 — Token expired/invalid */
+  isAuthError(): boolean {
+    return this.status === 401 || this.status === 403;
+  }
+
+  /** 404 — Endpoint/resource not found */
+  isNotFound(): boolean {
+    return this.status === 404;
+  }
+
+  /** 500+ — Server error */
+  isServerError(): boolean {
+    return this.status >= 500;
+  }
+
+  /** 0 — Network/offline error */
+  isNetworkError(): boolean {
+    return this.status === 0;
+  }
 }
 
 /**
@@ -49,13 +69,23 @@ async function apiFetch<T>(
     ...(initData ? { 'X-Telegram-Init-Data': initData } : {}),
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...headers,
-      ...(options?.headers as Record<string, string>),
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        ...headers,
+        ...(options?.headers as Record<string, string>),
+      },
+    });
+  } catch (err) {
+    // Network error (offline, DNS fail, CORS, etc.)
+    throw new PyngApiError(
+      0,
+      'Không thể kết nối đến server',
+      err instanceof Error ? err.message : 'Network error',
+    );
+  }
 
   if (!response.ok) {
     let errorData: ApiError | null = null;
@@ -65,9 +95,19 @@ async function apiFetch<T>(
       // JSON parse failed, use status text
     }
 
+    // User-friendly messages based on status
+    let message = errorData?.error || `HTTP ${response.status}`;
+    if (response.status === 401) {
+      message = errorData?.error || 'Phiên đăng nhập hết hạn. Vui lòng mở lại app từ Telegram.';
+    } else if (response.status === 404) {
+      message = errorData?.error || 'Không tìm thấy dữ liệu';
+    } else if (response.status >= 500) {
+      message = errorData?.error || 'Lỗi server. Vui lòng thử lại sau.';
+    }
+
     throw new PyngApiError(
       response.status,
-      errorData?.error || `HTTP ${response.status}`,
+      message,
       errorData?.detail,
     );
   }
