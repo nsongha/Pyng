@@ -382,3 +382,50 @@ Report:
 
 **Fix**: Đổi `basename="/miniapp/"` → `basename="/miniapp"` trong `App.tsx`
 
+### API-001: CORS headers bị ghi vào response body
+
+**Severity**: Critical (P0)
+**Status**: ✅ Resolved (2026-03-12)
+**Affects**: Mini App API (tất cả endpoints)
+**Files**: `services/auth_service.py`, `vercel.json`
+
+**Triệu chứng**:
+- Mini App hiện "HTTP 500" hoặc loading rồi biến mất
+- Console: `SyntaxError: Unexpected token 'A', "Access-Con"... is not valid JSON`
+
+**Root Cause**: Vercel Python runtime ghi `send_header()` vào response body stream thay vì HTTP headers → response body bắt đầu bằng `Access-Control-Allow-Methods: ...` thay vì `{` → `fetch().json()` fail.
+
+**Fix**:
+- Bỏ CORS headers khỏi `json_api_response()` và `handle_cors_preflight()` trong Python code
+- Chuyển CORS headers sang `vercel.json` headers config (edge level, đáng tin cậy hơn)
+- Bỏ `Content-Security-Policy: default-src 'self'` vì không cần thiết cho API routes
+
+### API-002: Column `is_ontime` không tồn tại trong DB
+
+**Severity**: High (P1)
+**Status**: ✅ Resolved (2026-03-12)
+**Affects**: `/api/me`, `/api/checkins`, `/api/checkins/chart`
+**Files**: `api/me.py`, `api/checkins.py`
+
+**Root Cause**: `api/me.py` và `api/checkins.py` query `columns="...,is_ontime"` nhưng column `is_ontime` **không có** trong `checkins` table schema → PostgREST trả error.
+
+`is_ontime` được tính at check-in time bởi `bot/handlers/_helpers.py` nhưng **không lưu vào DB** — chỉ dùng cho gamification points.
+
+**Fix**: Bỏ `is_ontime` khỏi DB queries, tính ontime từ `checked_at` timestamp dùng `report_service.is_late()`.
+
+### API-003: Token expired — initData hết hạn quá nhanh
+
+**Severity**: High (P1)
+**Status**: ✅ Resolved (2026-03-12)
+**Affects**: Mini App Auth (tất cả API calls)
+**Files**: `services/auth_service.py`
+
+**Triệu chứng**: Mini App hiện "Token expired" — đặc biệt khi user mở app lại sau một lúc.
+
+**Root Cause**: `MAX_AUTH_AGE_SECONDS = 3600` (1 giờ). Telegram cấp `auth_date` khi mở Mini App, nhưng giá trị này có thể cũ nếu:
+- Telegram client cache initData (không refresh khi switch tab)
+- User mở app từ Recent Apps thay vì mở mới
+- Server time khác biệt nhẹ với client time
+
+**Fix**: Tăng `MAX_AUTH_AGE_SECONDS` từ 3600 (1h) → 86400 (24h). HMAC-SHA256 signature đã đủ bảo mật.
+
