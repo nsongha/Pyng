@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+### perf
+
+- **Miniapp Performance Optimization** — giảm thời gian load ~50%:
+  - Parallel fetch: `fetchMe()` + `fetchCheckins()` chạy cùng lúc bằng `Promise.allSettled` (bỏ waterfall)
+  - Lazy loading: `React.lazy()` cho Charts/Leave/Salary pages (recharts ~400KB tải riêng)
+  - Limit checkout query: chỉ fetch 90 ngày thay vì toàn bộ lịch sử
+  - Cache headers: `s-maxage` cho API responses (60s me/checkins, 300s chart data)
+
 ### feat
 
 - **Phase 6 — Mini App Polish** (Stream B):
