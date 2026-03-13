@@ -61,40 +61,44 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      setCheckinsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setCheckinsLoading(true);
+    setError(null);
 
-      // Parallel fetch — cả 2 gọi cùng lúc, không waterfall
-      const [meResult, checkinsResult] = await Promise.allSettled([
-        fetchMe(telegram.initData),
-        fetchCheckins(telegram.initData, 30, 0),
-      ]);
+    // 2 promise chains chạy SONG SONG nhưng update state ĐỘC LẬP
+    // → Profile hiện ngay khi fetchMe xong, không đợi fetchCheckins
 
-      // Handle /api/me result
-      if (meResult.status === 'fulfilled') {
-        setProfile(meResult.value);
-      } else {
-        const err = meResult.reason;
+    // Chain 1: Profile (isLoading)
+    const profilePromise = fetchMe(telegram.initData)
+      .then((data) => {
+        setProfile(data);
+      })
+      .catch((err) => {
         if (err instanceof Error) {
           setError(err);
         } else {
           setError(String(err));
         }
         console.error('[TelegramProvider] Failed to load profile:', err);
-      }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
 
-      // Handle /api/checkins result (non-blocking — checkins fail thì vẫn hiện profile)
-      if (checkinsResult.status === 'fulfilled') {
-        setCheckins(checkinsResult.value.data);
-      } else {
-        console.error('[TelegramProvider] Failed to load checkins:', checkinsResult.reason);
-      }
-    } finally {
-      setIsLoading(false);
-      setCheckinsLoading(false);
-    }
+    // Chain 2: Checkins (checkinsLoading) — fail không ảnh hưởng profile
+    const checkinsPromise = fetchCheckins(telegram.initData, 30, 0)
+      .then((data) => {
+        setCheckins(data.data);
+      })
+      .catch((err) => {
+        console.error('[TelegramProvider] Failed to load checkins:', err);
+      })
+      .finally(() => {
+        setCheckinsLoading(false);
+      });
+
+    // Đợi cả 2 hoàn thành (cho refreshProfile await được)
+    await Promise.all([profilePromise, checkinsPromise]);
   };
 
   useEffect(() => {
