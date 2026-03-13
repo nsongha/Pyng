@@ -69,7 +69,7 @@ jobs:
 
       - name: Send ${{ steps.type.outputs.reminder }} reminder
         run: |
-          ENDPOINT="${{ secrets.WEBHOOK_URL }}/api/cron/${{ steps.type.outputs.reminder }}"
+          ENDPOINT="${{ secrets.WEBHOOK_URL }}/api/cron?task=${{ steps.type.outputs.reminder }}"
           echo "🔔 Calling: $ENDPOINT"
 
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$ENDPOINT" \
