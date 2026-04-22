@@ -18,12 +18,17 @@ _REST_BASE: str = ""
 # Shared headers
 _HEADERS: dict[str, str] = {}
 
+# Shared httpx.Client — tái sử dụng TCP connection + TLS handshake giữa các queries
+# trong cùng 1 serverless invocation. Quan trọng với endpoints làm nhiều queries tuần tự
+# (vd: /api/salary, /api/overtime).
+_CLIENT: httpx.Client | None = None
+
 
 def _ensure_init() -> None:
-    """Khởi tạo REST base URL và headers (lazy, 1 lần duy nhất)."""
-    global _REST_BASE, _HEADERS
+    """Khởi tạo REST base URL, headers, và shared httpx.Client (lazy, 1 lần)."""
+    global _REST_BASE, _HEADERS, _CLIENT
 
-    if _REST_BASE:
+    if _CLIENT is not None:
         return
 
     if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
@@ -37,6 +42,12 @@ def _ensure_init() -> None:
         "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
         "Content-Type": "application/json",
     }
+    # HTTP/2 + keep-alive → 1 TLS handshake cho toàn bộ queries trong 1 invocation
+    _CLIENT = httpx.Client(
+        http2=False,  # Supabase PostgREST không cần HTTP/2; giữ HTTP/1.1 đơn giản hơn
+        timeout=httpx.Timeout(10.0, connect=5.0),
+        limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
+    )
 
 
 def _build_filters(filters: dict) -> dict[str, str]:
@@ -101,7 +112,7 @@ def select(
         headers["Prefer"] = "count=exact"
         headers["Range-Unit"] = "items"
 
-    resp = httpx.get(f"{_REST_BASE}/{table}", headers=headers, params=params)
+    resp = _CLIENT.get(f"{_REST_BASE}/{table}", headers=headers, params=params)
     resp.raise_for_status()
 
     if count:
@@ -128,7 +139,7 @@ def insert(table: str, data: dict) -> dict:
     _ensure_init()
     headers = {**_HEADERS, "Prefer": "return=representation"}
 
-    resp = httpx.post(f"{_REST_BASE}/{table}", headers=headers, json=data)
+    resp = _CLIENT.post(f"{_REST_BASE}/{table}", headers=headers, json=data)
     resp.raise_for_status()
 
     rows = resp.json()
@@ -150,7 +161,7 @@ def update(table: str, data: dict, *, filters: dict) -> dict | None:
     headers = {**_HEADERS, "Prefer": "return=representation"}
     params = _build_filters(filters)
 
-    resp = httpx.patch(f"{_REST_BASE}/{table}", headers=headers, json=data, params=params)
+    resp = _CLIENT.patch(f"{_REST_BASE}/{table}", headers=headers, json=data, params=params)
     resp.raise_for_status()
 
     rows = resp.json()
@@ -171,7 +182,7 @@ def delete(table: str, *, filters: dict) -> list[dict]:
     headers = {**_HEADERS, "Prefer": "return=representation"}
     params = _build_filters(filters)
 
-    resp = httpx.delete(f"{_REST_BASE}/{table}", headers=headers, params=params)
+    resp = _CLIENT.delete(f"{_REST_BASE}/{table}", headers=headers, params=params)
     resp.raise_for_status()
 
     return resp.json()

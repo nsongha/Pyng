@@ -170,28 +170,72 @@ def get_monthly_overtime(user_id: int, month: int, year: int) -> dict:
             "sessions": list[dict] — [{date, minutes, checkout_time}],
         }
     """
-    # Tính ngày đầu/cuối tháng
+    tz = get_tz()
     first_day = date(year, month, 1)
     if month == 12:
         last_day = date(year + 1, 1, 1) - timedelta(days=1)
     else:
         last_day = date(year, month + 1, 1) - timedelta(days=1)
 
+    month_start = datetime(
+        first_day.year, first_day.month, first_day.day,
+        0, 0, 0, tzinfo=tz,
+    ).isoformat()
+    month_end = datetime(
+        last_day.year, last_day.month, last_day.day,
+        23, 59, 59, tzinfo=tz,
+    ).isoformat()
+
+    # Batch query: lấy TẤT CẢ checkouts trong tháng bằng 1 request
+    # (trước đây loop theo từng ngày → N+1 query)
+    all_checkouts = db.select(
+        "checkins",
+        columns="checked_at",
+        filters={
+            "user_id": user_id,
+            "type": "out",
+            "checked_at.gte": month_start,
+            "checked_at.lt": month_end,
+        },
+        order="checked_at.desc",
+    )
+
+    # Gom theo ngày, giữ checkout mới nhất (đã sort desc)
+    latest_checkout_by_date: dict[str, str] = {}
+    for co in all_checkouts:
+        co_dt = datetime.fromisoformat(co["checked_at"])
+        if co_dt.tzinfo is None:
+            co_dt = co_dt.replace(tzinfo=tz)
+        date_key = co_dt.strftime("%Y-%m-%d")
+        if date_key not in latest_checkout_by_date:
+            latest_checkout_by_date[date_key] = co["checked_at"]
+
     sessions = []
     total_minutes = 0
-
     current = first_day
+
     while current <= last_day:
-        # Chỉ tính ngày làm việc (Mon-Fri)
-        if current.weekday() < 5:
-            result = calculate_overtime(user_id, current)
-            if result["has_overtime"]:
-                sessions.append({
-                    "date": result["date"],
-                    "minutes": result["minutes"],
-                    "checkout_time": result["checkout_time"],
-                })
-                total_minutes += result["minutes"]
+        if current.weekday() < 5:  # Mon-Fri
+            date_key = current.isoformat()
+            co_str = latest_checkout_by_date.get(date_key)
+
+            if co_str:
+                checkout_dt = datetime.fromisoformat(co_str)
+                if checkout_dt.tzinfo is None:
+                    checkout_dt = checkout_dt.replace(tzinfo=tz)
+
+                work_end_dt = _get_work_end_datetime(current)
+                ot_threshold = work_end_dt + timedelta(minutes=OT_GRACE_MINUTES)
+
+                if checkout_dt > ot_threshold:
+                    ot_minutes = int((checkout_dt - ot_threshold).total_seconds() / 60)
+                    ot_minutes = min(ot_minutes, OT_CAP_MINUTES)
+                    sessions.append({
+                        "date": date_key,
+                        "minutes": ot_minutes,
+                        "checkout_time": co_str,
+                    })
+                    total_minutes += ot_minutes
 
         current += timedelta(days=1)
 

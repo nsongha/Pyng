@@ -26,7 +26,6 @@ from datetime import date, datetime, timedelta
 from db import client as db
 from config.settings import WORK_START
 from config.timezone import get_tz
-from services.config_service import get_config
 from services.overtime_service import get_monthly_overtime
 
 logger = logging.getLogger(__name__)
@@ -49,6 +48,8 @@ DEFAULT_LATE_GRACE_MINUTES = 5           # 5 phút (giống WORK_START grace)
 def get_salary_config() -> dict:
     """Đọc salary config từ system_config table.
 
+    Batch query: lấy 4 keys bằng 1 request (trước đây 4 queries tuần tự).
+
     Returns:
         dict: {
             "basic_monthly": int,
@@ -57,8 +58,12 @@ def get_salary_config() -> dict:
             "late_grace_minutes": int,
         }
     """
+    # 1 query thay vì 4 (get_config gọi 4 lần → 4x round-trip tới Supabase)
+    rows = db.select("system_config", columns="key,value")
+    config_map = {row["key"]: row["value"] for row in rows}
+
     def _int(key: str, default: int) -> int:
-        val = get_config(key)
+        val = config_map.get(key)
         if val is None:
             return default
         try:
